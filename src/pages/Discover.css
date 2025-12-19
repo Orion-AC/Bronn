@@ -1,0 +1,159 @@
+/* Page layout handled by PageLayout component */
+
+.section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    /* Used text-tertiary */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 24px;
+    margin-top: 20px;
+}
+
+.section-title:first-child {
+    margin-top: 0;
+}
+
+.featured-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 60px;
+}
+
+.featured-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+}
+
+.featured-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+}
+
+.featured-bg {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.featured-content {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+.app-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.app-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.app-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-name-discover {
+    /* Renamed to avoid collision if necessary, but actually scoped css modules would be better. Keeping logic simple */
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.app-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.visit-btn {
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.visit-btn:hover {
+    background: var(--border-color);
+}
+
+/* Builders Grid */
+.builders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.builder-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.builder-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+}
+
+.builder-preview {
+    height: 160px;
+    position: relative;
+}
+
+.builder-info {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    flex: 1;
+}
+
+.builder-tags {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
+}
+
+.tag {
+    font-size: 0.7rem;
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+}

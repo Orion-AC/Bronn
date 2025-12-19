@@ -1,0 +1,118 @@
+/* Page layout handled by PageLayout component */
+
+.workflows-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.workflow-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.workflow-item:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
+}
+
+.workflow-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.workflow-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.workflow-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.workflow-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.workflow-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.workflow-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.meta-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.meta-value {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.status-badge.success {
+    color: var(--status-success);
+    background: var(--status-success-bg);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.create-workflow-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 24px;
+    width: fit-content;
+}
+
+.create-workflow-btn:hover {
+    background: #4c4fe0;
+}

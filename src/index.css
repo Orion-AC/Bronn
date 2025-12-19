@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Orion Studio Palette */
+  --bg-primary: #000000;
+  /* Pure Black */
+  --bg-secondary: #0E0E11;
+  /* Panel Black */
+  --bg-card: #0E0E11;
+  /* Card Background */
+  --bg-card-hover: #18181B;
+  /* Lighter Card Hover */
+
+  --text-primary: #EDEDED;
+  /* Off-white */
+  --text-secondary: #A1A1AA;
+  /* Muted Text */
+  --text-tertiary: #52525B;
+  /* Darker Muted */
+
+  --accent-color: #5B5FFF;
+  /* Electric Indigo */
+  --accent-glow: rgba(91, 95, 255, 0.1);
+  /* Accent Glow Low Opacity */
+
+  --border-color: #27272A;
+  /* Subtle borders */
+  --border-hover: #3F3F46;
+  /* Hover borders */
+
+  --status-success: #10B981;
+  --status-success-bg: rgba(16, 185, 129, 0.1);
+  --status-error: #EF4444;
+  --status-error-bg: rgba(239, 68, 68, 0.1);
+  --status-warning: #EAB308;
+  --status-warning-bg: rgba(234, 179, 8, 0.1);
+
+  --sidebar-width: 260px;
+
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  min-width: 320px;
+  background-color: var(--bg-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 500;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
