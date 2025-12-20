@@ -32,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
             <div className="brand-section">
                 <div className="brand-logo">
                     <Hexagon size={20} fill="#5B5FFF" color="#5B5FFF" />
-                    Orion Studio
+                    Bronn
                 </div>
                 <div className="brand-workspace">
                     {user ? `${user.first_name} ${user.last_name}` : 'Workspace'}

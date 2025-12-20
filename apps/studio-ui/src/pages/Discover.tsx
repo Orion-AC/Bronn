@@ -6,7 +6,7 @@ export const Discover: React.FC = () => {
     return (
         <PageLayout
             title="Discover"
-            subtitle="Explore apps built by talented creators with Orion Studio"
+            subtitle="Explore apps built by talented creators with Bronn"
         >
             <div className="section-title">Featured apps</div>
 

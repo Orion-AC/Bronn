@@ -66,7 +66,7 @@ export const Register: React.FC<RegisterProps> = ({ onLogin }) => {
                         <Zap size={24} />
                     </div>
                     <h1>Create Account</h1>
-                    <p>Sign up to get started with Orion Studio</p>
+                    <p>Sign up to get started with Bronn</p>
                 </div>
 
                 <form className="login-form" onSubmit={handleSubmit}>

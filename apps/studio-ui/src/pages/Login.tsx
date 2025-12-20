@@ -58,7 +58,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <div className="login-logo">
                         <Zap size={24} />
                     </div>
-                    <h1>Welcome to Orion Studio</h1>
+                    <h1>Welcome to Bronn</h1>
                     <p>Sign in to your account to continue</p>
                 </div>
 

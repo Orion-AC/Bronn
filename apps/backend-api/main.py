@@ -9,7 +9,7 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(
     title="Bronn API",
-    description="Orion Studio Backend with Activepieces Integration",
+    description="Bronn Backend with Activepieces Integration",
     version="1.0.0"
 )
 
