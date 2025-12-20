@@ -1,9 +1,11 @@
 node_modules
 dist
-backend/venv
-backend/__pycache__
+.vite
 *.db
 .git
 .vscode
 .idea
 .DS_Store
+apps/activepieces
+__pycache__
+*.pyc

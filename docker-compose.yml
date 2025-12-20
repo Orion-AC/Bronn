@@ -1,35 +1,151 @@
-version: '3.8'
+# =============================================================================
+# Bronn + Activepieces Unified Docker Compose
+# =============================================================================
+#
+# Services:
+#   - postgres: Shared PostgreSQL database
+#   - redis: Required by Activepieces for queues
+#   - activepieces: Headless workflow engine (port 8080)
+#   - bronn-backend: FastAPI backend (port 8000)
+#   - bronn-frontend: React/Vite frontend (port 5173)
+#
+# Usage:
+#   make up       - Start all services
+#   make down     - Stop all services
+#   make logs     - View logs
+#   make logs-ap  - View Activepieces logs
+#
+# =============================================================================
 
 services:
-  backend:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL - Shared Database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:14.4
+    container_name: bronn-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bronn}
+      POSTGRES_USER: ${POSTGRES_USER:-bronn}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bronn_dev_password_change_in_prod}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - bronn-internal
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bronn}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis - Required by Activepieces
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.0.7
+    container_name: bronn-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - bronn-internal
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Activepieces - Headless Workflow Engine
+  # ---------------------------------------------------------------------------
+  activepieces:
+    image: ghcr.io/activepieces/activepieces:0.74.3
+    container_name: bronn-activepieces
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - activepieces_cache:/usr/src/app/cache
+    networks:
+      - bronn-internal
+      - bronn-external # Needs internet access for initial setup
+    # Note: Not exposing port 8080 externally - only accessible via bronn-backend
+    # For debugging, uncomment the following:
+    # ports:
+    #   - "8080:80"
+
+
+    # ---------------------------------------------------------------------------
+    # Bronn Backend - FastAPI
+    # ---------------------------------------------------------------------------
+  bronn-backend:
     build:
-      context: ./backend
+      context: ./apps/backend-api
       dockerfile: Dockerfile
+    container_name: bronn-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      activepieces:
+        condition: service_started
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app/backend
-      - backend_data:/app/data
-
+      - ./apps/backend-api:/app/backend
     environment:
-      - DATABASE_URL=sqlite:///./bronn.db
-    restart: always
+      DATABASE_URL: ${DATABASE_URL:-postgresql://bronn:bronn_dev_password_change_in_prod@postgres:5432/bronn}
+      ACTIVEPIECES_URL: http://activepieces:80
+    networks:
+      - bronn-internal
+      - bronn-external
 
-  frontend:
+  # ---------------------------------------------------------------------------
+  # Bronn Frontend - React/Vite
+  # ---------------------------------------------------------------------------
+  bronn-frontend:
     build:
-      context: .
+      context: ./apps/studio-ui
       dockerfile: Dockerfile
+    container_name: bronn-frontend
+    restart: unless-stopped
+    depends_on:
+      - bronn-backend
     ports:
       - "5173:5173"
-
     volumes:
-      - .:/app
+      - ./apps/studio-ui:/app
       - /app/node_modules
     environment:
-      - VITE_BACKEND_URL=http://backend:8000
-    depends_on:
-      - backend
-    restart: always
+      VITE_BACKEND_URL: http://bronn-backend:8000
+      VITE_ACTIVEPIECES_URL: http://localhost:8080
+    networks:
+      - bronn-external
 
+# =============================================================================
+# Volumes
+# =============================================================================
 volumes:
-  backend_data:
+  postgres_data:
+  redis_data:
+  activepieces_cache:
+
+    # =============================================================================
+    # Networks
+    # =============================================================================
+networks:
+  # Internal network - not accessible from host
+  # Postgres, Redis, Activepieces only communicate here
+  bronn-internal:
+    internal: true
+
+  # External network - accessible from host
+  # Frontend and Backend expose ports here
+  bronn-external:
+    driver: bridge
