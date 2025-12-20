@@ -1,15 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Save } from 'lucide-react';
-import { PageLayout } from '../components/PageLayout';
-import { ActivepiecesEmbed } from '../components/ActivepiecesEmbed';
+import { ArrowLeft, ExternalLink, Zap } from 'lucide-react';
 import './WorkflowEditor.css';
+
+// Activepieces URL - exposed on port 8080
+const ACTIVEPIECES_URL = 'http://localhost:8080';
 
 export const WorkflowEditor: React.FC = () => {
     const navigate = useNavigate();
 
-    const handleNavigate = (route: string) => {
-        console.log('Activepieces navigation:', route);
+    const handleOpenActivepieces = () => {
+        // Open Activepieces in a new tab
+        window.open(ACTIVEPIECES_URL, '_blank');
     };
 
     return (
@@ -19,7 +21,7 @@ export const WorkflowEditor: React.FC = () => {
                     Workflows
                 </a>
                 <span>/</span>
-                <span>Activepieces Editor</span>
+                <span>Activepieces</span>
             </div>
 
             <div className="workflow-editor-header">
@@ -31,23 +33,35 @@ export const WorkflowEditor: React.FC = () => {
                         <ArrowLeft size={18} />
                         Back
                     </button>
-                    <h1>Workflow Editor</h1>
-                </div>
-
-                <div className="workflow-editor-actions">
-                    <button className="workflow-editor-btn secondary">
-                        <Save size={18} />
-                        Save
-                    </button>
-                    <button className="workflow-editor-btn primary">
-                        <Play size={18} />
-                        Run
-                    </button>
+                    <h1>Activepieces Workflow Engine</h1>
                 </div>
             </div>
 
-            <div className="workflow-editor-content">
-                <ActivepiecesEmbed onNavigate={handleNavigate} />
+            <div className="workflow-redirect-content">
+                <div className="redirect-card">
+                    <div className="redirect-icon">
+                        <Zap size={48} />
+                    </div>
+                    <h2>Open Activepieces</h2>
+                    <p>
+                        Create and manage powerful automation workflows with Activepieces.
+                        Click below to open the workflow editor in a new tab.
+                    </p>
+                    <button
+                        className="open-activepieces-btn"
+                        onClick={handleOpenActivepieces}
+                    >
+                        <ExternalLink size={20} />
+                        Open Workflow Editor
+                    </button>
+                    <div className="credentials-info">
+                        <strong>Login Credentials:</strong>
+                        <p>Use your Bronn account credentials to login.</p>
+                        <p className="dev-note">
+                            Dev mode: email <code>dev@ap.com</code> / password <code>12345678</code>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -17,11 +17,6 @@
   margin: 0;
 }
 
-.workflow-editor-actions {
-  display: flex;
-  gap: 12px;
-}
-
 .workflow-editor-btn {
   display: flex;
   align-items: center;
@@ -35,15 +30,6 @@
   border: none;
 }
 
-.workflow-editor-btn.primary {
-  background: var(--accent-primary);
-  color: white;
-}
-
-.workflow-editor-btn.primary:hover {
-  background: var(--accent-primary-hover);
-}
-
 .workflow-editor-btn.secondary {
   background: var(--bg-tertiary);
   color: var(--text-primary);
@@ -52,14 +38,6 @@
 
 .workflow-editor-btn.secondary:hover {
   background: var(--bg-hover);
-}
-
-.workflow-editor-content {
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  min-height: calc(100vh - 200px);
-  overflow: hidden;
 }
 
 .workflow-breadcrumb {
@@ -78,4 +56,99 @@
 
 .workflow-breadcrumb a:hover {
   text-decoration: underline;
+}
+
+/* Redirect content styles */
+.workflow-redirect-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.redirect-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 500px;
+  text-align: center;
+}
+
+.redirect-icon {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  color: white;
+}
+
+.redirect-card h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+}
+
+.redirect-card p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.open-activepieces-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.open-activepieces-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.credentials-info {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.credentials-info strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.credentials-info p {
+  margin: 8px 0;
+}
+
+.credentials-info .dev-note {
+  background: var(--bg-tertiary);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.credentials-info code {
+  background: var(--bg-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--accent-primary);
 }

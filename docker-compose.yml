@@ -75,12 +75,9 @@ services:
     networks:
       - bronn-internal
       - bronn-external # Needs internet access for initial setup
-    # Note: Not exposing port 8080 externally - only accessible via bronn-backend
-    # For debugging, uncomment the following:
-    # ports:
-    #   - "8080:80"
-
-
+    # Expose Activepieces for embedded SDK access from browser
+    ports:
+      - "8080:80"
     # ---------------------------------------------------------------------------
     # Bronn Backend - FastAPI
     # ---------------------------------------------------------------------------
