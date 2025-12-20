@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 from . import models, database
-from .routers import activepieces
+from .routers import activepieces, auth
 
 models.Base.metadata.create_all(bind=database.engine)
 
@@ -27,8 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Activepieces router
+# Include routers
+app.include_router(auth.router)
 app.include_router(activepieces.router)
+
 
 # Health check
 @app.get("/api/health")

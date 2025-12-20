@@ -6,7 +6,11 @@ import './WorkflowEditor.css';
 // Activepieces URL - exposed on port 8080
 const ACTIVEPIECES_URL = 'http://localhost:8080';
 
-export const WorkflowEditor: React.FC = () => {
+interface WorkflowEditorProps {
+    user?: { email: string; first_name: string; last_name: string } | null;
+}
+
+export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({ user }) => {
     const navigate = useNavigate();
 
     const handleOpenActivepieces = () => {
@@ -55,11 +59,15 @@ export const WorkflowEditor: React.FC = () => {
                         Open Workflow Editor
                     </button>
                     <div className="credentials-info">
-                        <strong>Login Credentials:</strong>
-                        <p>Use your Bronn account credentials to login.</p>
-                        <p className="dev-note">
-                            Dev mode: email <code>dev@ap.com</code> / password <code>12345678</code>
-                        </p>
+                        <strong>Login with:</strong>
+                        {user ? (
+                            <p>
+                                Use your account credentials:<br />
+                                Email: <code>{user.email}</code>
+                            </p>
+                        ) : (
+                            <p>Use your Bronn account credentials to login.</p>
+                        )}
                     </div>
                 </div>
             </div>

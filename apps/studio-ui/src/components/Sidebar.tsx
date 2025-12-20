@@ -11,11 +11,17 @@ import {
     Settings,
     User,
     Hexagon,
-    Rocket
+    Rocket,
+    LogOut
 } from 'lucide-react';
 import './Sidebar.css';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+    user?: { email: string; first_name: string; last_name: string } | null;
+    onLogout?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -28,7 +34,9 @@ export const Sidebar: React.FC = () => {
                     <Hexagon size={20} fill="#5B5FFF" color="#5B5FFF" />
                     Orion Studio
                 </div>
-                <div className="brand-workspace">Workspace: Rishi</div>
+                <div className="brand-workspace">
+                    {user ? `${user.first_name} ${user.last_name}` : 'Workspace'}
+                </div>
             </div>
 
             <nav className="nav-group">
@@ -103,8 +111,14 @@ export const Sidebar: React.FC = () => {
                 </div>
                 <div className="nav-item">
                     <User size={18} />
-                    <span>Profile</span>
+                    <span>{user?.email || 'Profile'}</span>
                 </div>
+                {onLogout && (
+                    <div className="nav-item logout" onClick={onLogout}>
+                        <LogOut size={18} />
+                        <span>Sign Out</span>
+                    </div>
+                )}
             </div>
         </aside>
     );
