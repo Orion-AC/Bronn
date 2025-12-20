@@ -6,6 +6,7 @@ import { Discover } from './pages/Discover';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { Agents } from './pages/Agents';
 import { Workflows } from './pages/Workflows';
+import { WorkflowEditor } from './pages/WorkflowEditor';
 import { Deployments } from './pages/Deployments';
 import './App.css';
 
@@ -19,6 +20,8 @@ function App() {
           <Route path="/apps" element={<Apps />} />
           <Route path="/agents" element={<Agents />} />
           <Route path="/workflows" element={<Workflows />} />
+          <Route path="/workflows/editor" element={<WorkflowEditor />} />
+          <Route path="/workflows/editor/:id" element={<WorkflowEditor />} />
           <Route path="/deployments" element={<Deployments />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/templates" element={<TemplatesPage />} />
@@ -29,3 +32,4 @@ function App() {
 }
 
 export default App;
+

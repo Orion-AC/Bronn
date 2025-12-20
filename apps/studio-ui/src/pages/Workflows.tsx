@@ -1,5 +1,6 @@
 import React from 'react';
-import { Plus, GitBranch, Terminal, Globe } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, GitBranch, Terminal, Globe, Zap } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 import './Workflows.css';
 
@@ -13,6 +14,7 @@ interface Workflow {
 }
 
 export const Workflows: React.FC = () => {
+    const navigate = useNavigate();
     const [workflows, setWorkflows] = React.useState<Workflow[]>([]);
     const [loading, setLoading] = React.useState(true);
 
@@ -42,10 +44,24 @@ export const Workflows: React.FC = () => {
             title="Workflows"
             subtitle="Automate your development, testing, and deployment pipelines"
         >
-            <button className="create-workflow-btn">
-                <Plus size={18} />
-                New Workflow
-            </button>
+            <div className="workflow-actions" style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                <button className="create-workflow-btn">
+                    <Plus size={18} />
+                    New Workflow
+                </button>
+                <button
+                    className="create-workflow-btn activepieces-btn"
+                    onClick={() => navigate('/workflows/editor')}
+                    style={{
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        border: 'none',
+                    }}
+                >
+                    <Zap size={18} />
+                    Activepieces Editor
+                </button>
+            </div>
+
 
             <div className="workflows-list">
                 {workflows.map((wf) => (
