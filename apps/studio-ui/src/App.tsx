@@ -11,6 +11,7 @@ import { WorkflowEditor } from './pages/WorkflowEditor';
 import { Deployments } from './pages/Deployments';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ActivepiecesSSO } from './pages/ActivepiecesSSO';
 import './App.css';
 
 interface User {
@@ -96,6 +97,7 @@ function App() {
                   <Route path="/apps" element={<Apps />} />
                   <Route path="/agents" element={<Agents />} />
                   <Route path="/workflows" element={<Workflows />} />
+                  <Route path="/workflows/sso" element={<ActivepiecesSSO />} />
                   <Route path="/workflows/editor" element={<WorkflowEditor user={user} />} />
                   <Route path="/workflows/editor/:id" element={<WorkflowEditor user={user} />} />
                   <Route path="/deployments" element={<Deployments />} />
