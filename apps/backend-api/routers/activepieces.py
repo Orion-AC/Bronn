@@ -11,6 +11,7 @@ from fastapi import APIRouter, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 from typing import Optional
 
+from ..auth.users import get_current_user
 from ..auth.signing_key import create_activepieces_jwt, get_public_key
 
 router = APIRouter(prefix="/api/workflows/engine", tags=["activepieces"])
@@ -18,26 +19,31 @@ router = APIRouter(prefix="/api/workflows/engine", tags=["activepieces"])
 # Activepieces internal URL
 ACTIVEPIECES_URL = os.getenv("ACTIVEPIECES_URL", "http://activepieces:80")
 
-
 @router.get("/token")
 async def get_embed_token(
-    user_id: str = "demo-user",
-    project_id: str = "demo-project",
-    first_name: str = "Demo",
-    last_name: str = "User"
+    request: Request,
+    project_id: str = "default"
 ):
     """
-    Generate a JWT token for embedding Activepieces.
-    
-    In production, this should use the authenticated Bronn user's credentials.
-    For now, we use demo values.
+    Generate a JWT token for embedding Activepieces using authenticated user info.
     """
+    # Get token from header
+    authorization = request.headers.get("Authorization")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token_str = authorization.split(" ")[1]
+    user = get_current_user(token_str)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
     try:
         token = create_activepieces_jwt(
-            user_id=user_id,
+            user_id=user["email"],
             project_id=project_id,
-            first_name=first_name,
-            last_name=last_name,
+            first_name=user["first_name"],
+            last_name=user["last_name"],
             role="EDITOR"
         )
         return {"token": token, "instanceUrl": ACTIVEPIECES_URL}

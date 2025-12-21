@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Plus, Activity, Clock } from 'lucide-react';
+import { Bot, Plus, Activity, Clock, Zap } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 import { CreateAgentModal } from '../components/CreateAgentModal';
 import './Agents.css';
@@ -11,6 +11,7 @@ interface Agent {
     status: string;
     uptime: string;
     tests_run: string;
+    skills?: string[];
 }
 
 export const Agents: React.FC = () => {
@@ -93,10 +94,19 @@ export const Agents: React.FC = () => {
                                 <span className="metric-label">Tasks</span>
                             </div>
                         </div>
+                        {agent.skills && agent.skills.length > 0 && (
+                            <div className="agent-skills-display">
+                                {agent.skills.map((skillId: string, idx: number) => (
+                                    <div key={idx} className="skill-chip">
+                                        <Zap size={10} />
+                                        <span>Skill {skillId}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 ))}
-
             </div>
-        </PageLayout>
+        </PageLayout >
     );
 };

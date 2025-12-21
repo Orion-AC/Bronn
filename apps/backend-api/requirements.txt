@@ -7,3 +7,11 @@ httpx
 pydantic
 python-dotenv
 cryptography
+# Phase 3: Observability & Connectivity
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-sqlalchemy
+opentelemetry-exporter-otlp
+mcp
+authlib

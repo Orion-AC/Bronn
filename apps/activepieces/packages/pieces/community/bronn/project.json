@@ -1,0 +1,31 @@
+{
+    "name": "pieces-bronn",
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/pieces/community/bronn/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": [
+                "{options.outputPath}"
+            ],
+            "options": {
+                "outputPath": "dist/packages/pieces/community/bronn",
+                "tsConfig": "packages/pieces/community/bronn/tsconfig.lib.json",
+                "packageJson": "packages/pieces/community/bronn/package.json",
+                "main": "packages/pieces/community/bronn/src/index.ts",
+                "assets": [
+                    "packages/pieces/community/bronn/*.md"
+                ],
+                "buildableProjectDepsInPackageJsonType": "dependencies",
+                "updateBuildableProjectDepsInPackageJson": true
+            }
+        },
+        "lint": {
+            "executor": "@nx/eslint:lint",
+            "outputs": [
+                "{options.outputFile}"
+            ]
+        }
+    }
+}

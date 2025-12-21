@@ -66,8 +66,37 @@
 
 .form-input:focus,
 .form-select:focus {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 2px rgba(91, 95, 255, 0.1);
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.skills-selection {
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    background: var(--bg-primary);
+}
+
+.skills-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skill-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.skill-checkbox-item input {
+    accent-color: var(--accent-color);
 }
 
 .modal-actions {

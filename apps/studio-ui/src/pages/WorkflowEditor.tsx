@@ -1,22 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Zap } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { ActivepiecesEmbed } from '../components/ActivepiecesEmbed';
 import './WorkflowEditor.css';
-
-// Activepieces URL - exposed on port 8080
-const ACTIVEPIECES_URL = 'http://localhost:8080';
 
 interface WorkflowEditorProps {
     user?: { email: string; first_name: string; last_name: string } | null;
 }
 
-export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({ user }) => {
+export const WorkflowEditor: React.FC<WorkflowEditorProps> = () => {
     const navigate = useNavigate();
-
-    const handleOpenActivepieces = () => {
-        // Open Activepieces in a new tab
-        window.open(ACTIVEPIECES_URL, '_blank');
-    };
 
     return (
         <div className="workflow-editor-container">
@@ -41,35 +34,8 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({ user }) => {
                 </div>
             </div>
 
-            <div className="workflow-redirect-content">
-                <div className="redirect-card">
-                    <div className="redirect-icon">
-                        <Zap size={48} />
-                    </div>
-                    <h2>Open Activepieces</h2>
-                    <p>
-                        Create and manage powerful automation workflows with Activepieces.
-                        Click below to open the workflow editor in a new tab.
-                    </p>
-                    <button
-                        className="open-activepieces-btn"
-                        onClick={handleOpenActivepieces}
-                    >
-                        <ExternalLink size={20} />
-                        Open Workflow Editor
-                    </button>
-                    <div className="credentials-info">
-                        <strong>Login with:</strong>
-                        {user ? (
-                            <p>
-                                Use your account credentials:<br />
-                                Email: <code>{user.email}</code>
-                            </p>
-                        ) : (
-                            <p>Use your Bronn account credentials to login.</p>
-                        )}
-                    </div>
-                </div>
+            <div className="workflow-editor-content">
+                <ActivepiecesEmbed />
             </div>
         </div>
     );

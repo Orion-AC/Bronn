@@ -11,7 +11,18 @@ interface CreateAgentModalProps {
 export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onClose, onSuccess }) => {
     const [name, setName] = useState('');
     const [role, setRole] = useState('General Assistant');
+    const [skills, setSkills] = useState<string[]>([]);
+    const [availableWorkflows, setAvailableWorkflows] = useState<any[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    React.useEffect(() => {
+        if (isOpen) {
+            fetch('/api/workflows')
+                .then(res => res.json())
+                .then(data => setAvailableWorkflows(data))
+                .catch(err => console.error("Failed to fetch workflows", err));
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -20,16 +31,23 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
         setIsSubmitting(true);
 
         try {
-            // Using query params to match python backend implementation
-            const url = `/api/agents?name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&status=idle`;
-
-            const res = await fetch(url, { method: 'POST' });
+            const res = await fetch('/api/agents', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    role,
+                    status: 'idle',
+                    skills
+                })
+            });
 
             if (res.ok) {
                 onSuccess();
                 onClose();
                 setName('');
                 setRole('General Assistant');
+                setSkills([]);
             } else {
                 console.error("Failed to create agent");
             }
@@ -76,6 +94,35 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
                             <option>Log Analysis</option>
                             <option>Code Reviewer</option>
                         </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Workflow Skills (Activepieces)</label>
+                        <div className="skills-selection">
+                            {availableWorkflows.length === 0 ? (
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No workflows available. Create one in the Workflows tab.</p>
+                            ) : (
+                                <div className="skills-checkbox-group">
+                                    {availableWorkflows.map(wf => (
+                                        <label key={wf.id} className="skill-checkbox-item">
+                                            <input
+                                                type="checkbox"
+                                                checked={skills.includes(wf.id.toString())}
+                                                onChange={(e) => {
+                                                    const id = wf.id.toString();
+                                                    if (e.target.checked) {
+                                                        setSkills([...skills, id]);
+                                                    } else {
+                                                        setSkills(skills.filter(s => s !== id));
+                                                    }
+                                                }}
+                                            />
+                                            <span>{wf.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="modal-actions">

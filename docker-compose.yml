@@ -78,9 +78,10 @@ services:
     # Expose Activepieces for embedded SDK access from browser
     ports:
       - "8080:80"
-    # ---------------------------------------------------------------------------
-    # Bronn Backend - FastAPI
-    # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
+  # Bronn Backend - FastAPI
+  # ---------------------------------------------------------------------------
   bronn-backend:
     build:
       context: ./apps/backend-api
@@ -99,6 +100,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://bronn:bronn_dev_password_change_in_prod@postgres:5432/bronn}
       ACTIVEPIECES_URL: http://activepieces:80
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: bronn-backend
     networks:
       - bronn-internal
       - bronn-external
@@ -125,6 +128,42 @@ services:
     networks:
       - bronn-external
 
+  # ---------------------------------------------------------------------------
+  # Observability - OpenTelemetry, Prometheus, Grafana
+  # ---------------------------------------------------------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.75.0
+    container_name: bronn-otel-collector
+    restart: unless-stopped
+    volumes:
+      - ./docker/otel-collector-config.yml:/etc/otel-collector-config.yml
+    command: [ "--config=/etc/otel-collector-config.yml" ]
+    networks:
+      - bronn-internal
+
+  prometheus:
+    image: prom/prometheus:v2.43.0
+    container_name: bronn-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - bronn-internal
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:9.5.1
+    container_name: bronn-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=bronn_admin
+    networks:
+      - bronn-internal
+      - bronn-external
+    ports:
+      - "3000:3000"
+
 # =============================================================================
 # Volumes
 # =============================================================================
@@ -137,12 +176,7 @@ volumes:
     # Networks
     # =============================================================================
 networks:
-  # Internal network - not accessible from host
-  # Postgres, Redis, Activepieces only communicate here
   bronn-internal:
     internal: true
-
-  # External network - accessible from host
-  # Frontend and Backend expose ports here
   bronn-external:
     driver: bridge
