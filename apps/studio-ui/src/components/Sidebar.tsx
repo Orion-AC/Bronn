@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
                 </div>
                 <div
                     className={`nav-item ${isActive('/workflows') ? 'active' : ''}`}
-                    onClick={() => navigate('/workflows/sso')}
+                    onClick={() => window.open('http://localhost:8080', '_blank')}
                 >
                     <Workflow size={18} />
                     <span>Workflows</span>
