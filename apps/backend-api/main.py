@@ -7,9 +7,12 @@ from .routers import activepieces, auth, agents, workflows, sso
 from .monitoring import setup_monitoring
 
 models.Base.metadata.create_all(bind=database.engine)
-
+app = FastAPI(
+    title="Bronn API",
+    description="Bronn Backend with Activepieces Integration",
     version="1.0.0"
 )
+
 
 # Setup Monitoring (OpenTelemetry)
 setup_monitoring(app, database.engine)
