@@ -24,7 +24,7 @@ jobs:
         
     - name: Run Tests
       run: |
-        export PYTHONPATH=$PYTHONPATH:$(pwd)/apps
+        export PYTHONPATH=$PYTHONPATH:$(pwd)/apps:$(pwd)/apps/backend-api
         pytest apps/backend-api/tests/test_main.py
 
     - name: Configure AWS Credentials

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional, Any
-from .. import models, database
-from ..auth.users import get_current_user
+import models, database
+from auth.users import get_current_user
 
 router = APIRouter(
     prefix="/api/workflows",

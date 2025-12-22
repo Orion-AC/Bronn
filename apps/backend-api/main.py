@@ -2,9 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
-from . import models, database
-from .routers import activepieces, auth, agents, workflows, sso
-from .monitoring import setup_monitoring
+import models, database
+from routers import activepieces, auth, agents, workflows, sso
+import monitoring
 
 models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(
@@ -15,7 +15,7 @@ app = FastAPI(
 
 
 # Setup Monitoring (OpenTelemetry)
-setup_monitoring(app, database.engine)
+monitoring.setup_monitoring(app, database.engine)
 
 # Enable CORS
 app.add_middleware(

@@ -10,15 +10,15 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
-from ..auth.users import (
+from auth.users import (
     login_user,
     register_user,
     get_current_user,
     authenticate_user,
     users_db
 )
-from ..auth.signing_key import create_activepieces_jwt
-from ..auth.activepieces_sync import (
+from auth.signing_key import create_activepieces_jwt
+from auth.activepieces_sync import (
     sync_user_to_activepieces,
     get_activepieces_token,
     ensure_user_in_activepieces

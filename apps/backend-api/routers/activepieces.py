@@ -11,8 +11,8 @@ from fastapi import APIRouter, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 from typing import Optional
 
-from ..auth.users import get_current_user
-from ..auth.signing_key import create_activepieces_jwt, get_public_key
+from auth.users import get_current_user
+from auth.signing_key import create_activepieces_jwt, get_public_key
 
 router = APIRouter(prefix="/api/workflows/engine", tags=["activepieces"])
 
