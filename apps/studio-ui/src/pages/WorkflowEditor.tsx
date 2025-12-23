@@ -5,7 +5,7 @@ import { ActivepiecesEmbed } from '../components/ActivepiecesEmbed';
 import './WorkflowEditor.css';
 
 interface WorkflowEditorProps {
-    user?: { email: string; first_name: string; last_name: string } | null;
+    user?: { email: string; first_name?: string | null; last_name?: string | null } | null;
 }
 
 export const WorkflowEditor: React.FC<WorkflowEditorProps> = () => {
