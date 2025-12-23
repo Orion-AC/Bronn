@@ -9,6 +9,7 @@ dist
 .vite
 *.log
 .DS_Store
+.coverage
 apps/activepieces/node_modules
 apps/activepieces/.next
 apps/studio-ui/node_modules

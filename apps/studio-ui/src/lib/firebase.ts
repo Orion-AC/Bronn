@@ -4,16 +4,16 @@
  * This module initializes Firebase and provides auth helper functions.
  */
 
-import { initializeApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
     getAuth,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
     onAuthStateChanged,
-    User,
-    UserCredential,
-    Auth,
+    type User,
+    type UserCredential,
+    type Auth,
     GoogleAuthProvider,
     signInWithPopup,
     sendPasswordResetEmail,

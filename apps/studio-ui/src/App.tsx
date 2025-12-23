@@ -19,10 +19,10 @@ import './App.css';
 interface User {
   id?: string;
   email: string;
-  first_name?: string;
-  last_name?: string;
-  display_name?: string;
-  avatar_url?: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
 }
 
 function App() {
