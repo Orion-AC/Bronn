@@ -45,7 +45,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Cloud Run requires the app to listen on PORT env var (default 8080)
 # We need to replace the port in nginx config at runtime
-RUN echo 'server { \n\
+RUN mkdir -p /etc/nginx/templates && \
+    echo 'server { \n\
     listen $PORT; \n\
     server_name _; \n\
     root /usr/share/nginx/html; \n\
