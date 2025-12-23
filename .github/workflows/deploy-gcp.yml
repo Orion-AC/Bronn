@@ -131,16 +131,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate GCP Credentials
+      - name: Validate Environment
         run: |
-          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
-            echo "::error::GCP_SA_KEY secret is not set. Please configure a valid GCP Service Account JSON key."
-            echo "To fix this:"
-            echo "1. Go to GCP Console > IAM & Admin > Service Accounts"
-            echo "2. Select your service account > Keys > Add Key > Create new key (JSON)"
-            echo "3. Update the GCP_SA_KEY secret in GitHub repository settings"
-            exit 1
-          fi
+          echo "Verifying environment variables..."
+          if [ -z "${{ env.GCP_PROJECT_ID }}" ]; then echo "::error::GCP_PROJECT_ID is missing"; exit 1; fi
+          if [ -z "${{ env.GCP_REGION }}" ]; then echo "::error::GCP_REGION is missing"; exit 1; fi
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then echo "::error::GCP_SA_KEY is missing"; exit 1; fi
+          echo "✅ Environment variables verified"
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -159,22 +156,26 @@ jobs:
         id: build-backend
         run: |
           IMAGE="${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }}"
-          docker build -t $IMAGE -f apps/backend-api/Dockerfile apps/backend-api
-          docker push $IMAGE
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "Building backend image: $IMAGE"
+          docker build -t "$IMAGE" -f apps/backend-api/Dockerfile apps/backend-api
+          docker push "$IMAGE"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "::notice::Backend image pushed: $IMAGE"
 
       - name: Build & Push Frontend Image
         id: build-frontend
         run: |
           IMAGE="${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }}"
-          docker build -t $IMAGE \
+          echo "Building frontend image: $IMAGE"
+          docker build -t "$IMAGE" \
             --build-arg VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }} \
             --build-arg VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com \
             --build-arg VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
             --build-arg VITE_BACKEND_URL=https://bronn-backend-${{ env.GCP_PROJECT_ID }}.run.app \
             -f apps/studio-ui/Dockerfile.prod apps/studio-ui
-          docker push $IMAGE
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          docker push "$IMAGE"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "::notice::Frontend image pushed: $IMAGE"
 
   # ============================================================================
   # Job 4: Deploy to Cloud Run
