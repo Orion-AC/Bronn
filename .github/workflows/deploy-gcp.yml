@@ -33,6 +33,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -120,7 +121,7 @@ jobs:
     name: Build & Push Images
     runs-on: ubuntu-latest
     needs: [test-backend, test-frontend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     
     outputs:
       backend-image: ${{ steps.build-backend.outputs.image }}
@@ -182,6 +183,7 @@ jobs:
     name: Deploy to Cloud Run
     runs-on: ubuntu-latest
     needs: build
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     environment: production
     
     steps:
@@ -253,6 +255,7 @@ jobs:
     name: Smoke Tests
     runs-on: ubuntu-latest
     needs: deploy
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Validate GCP Credentials
