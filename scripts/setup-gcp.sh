@@ -148,6 +148,16 @@ for role in "${ROLES[@]}"; do
         --role="$role" \
         --quiet
 done
+
+# Grant Secret Manager access to the Default Compute Service Account (required for Cloud Run runtime)
+echo "  Granting Secret Manager access to Default Compute Service Account..."
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+COMPUTE_SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$COMPUTE_SA" \
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet
+
 echo "✅ Permissions granted"
 
 # Create and download service account key
