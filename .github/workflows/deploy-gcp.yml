@@ -123,10 +123,6 @@ jobs:
     needs: [test-backend, test-frontend]
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     
-    outputs:
-      backend-image: ${{ steps.build-backend.outputs.image }}
-      frontend-image: ${{ steps.build-frontend.outputs.image }}
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -159,7 +155,6 @@ jobs:
           echo "Building backend image: $IMAGE"
           docker build -t "$IMAGE" -f apps/backend-api/Dockerfile apps/backend-api
           docker push "$IMAGE"
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
           echo "::notice::Backend image pushed: $IMAGE"
 
       - name: Build & Push Frontend Image
@@ -174,7 +169,6 @@ jobs:
             --build-arg VITE_BACKEND_URL=https://bronn-backend-${{ env.GCP_PROJECT_ID }}.run.app \
             -f apps/studio-ui/Dockerfile.prod apps/studio-ui
           docker push "$IMAGE"
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
           echo "::notice::Frontend image pushed: $IMAGE"
 
   # ============================================================================
@@ -204,21 +198,16 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Validate Build Outputs
+      - name: Validate Environment
         run: |
-          if [ -z "${{ needs.build.outputs.backend-image }}" ]; then
-            echo "::error::Backend Docker image was not built! Check the 'build' job outputs."
-            exit 1
-          fi
-          if [ -z "${{ needs.build.outputs.frontend-image }}" ]; then
-            echo "::error::Frontend Docker image was not built! Check the 'build' job outputs."
-            exit 1
-          fi
+          if [ -z "${{ env.GCP_PROJECT_ID }}" ]; then echo "::error::GCP_PROJECT_ID is missing"; exit 1; fi
+          if [ -z "${{ env.GCP_REGION }}" ]; then echo "::error::GCP_REGION is missing"; exit 1; fi
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then echo "::error::GCP_SA_KEY is missing"; exit 1; fi
 
       - name: Deploy Backend to Cloud Run
         run: |
           gcloud run deploy bronn-backend \
-            --image=${{ needs.build.outputs.backend-image }} \
+            --image=${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }} \
             --region=${{ env.GCP_REGION }} \
             --platform=managed \
             --allow-unauthenticated \
@@ -237,7 +226,7 @@ jobs:
       - name: Deploy Frontend to Cloud Run
         run: |
           gcloud run deploy bronn-frontend \
-            --image=${{ needs.build.outputs.frontend-image }} \
+            --image=${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }} \
             --region=${{ env.GCP_REGION }} \
             --platform=managed \
             --allow-unauthenticated \
