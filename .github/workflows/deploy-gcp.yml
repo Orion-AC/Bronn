@@ -1,3 +1,31 @@
+# =============================================================================
+# Deploy to Google Cloud
+# =============================================================================
+# 
+# This workflow builds and deploys the Bronn application to Google Cloud Run.
+#
+# REQUIRED SECRETS:
+# -----------------
+# GCP_SA_KEY:            Service Account JSON key for authentication.
+#                        Generate from GCP Console: IAM & Admin > Service Accounts
+#                        > [Select Account] > Keys > Add Key > Create new key (JSON)
+#
+# GCP_PROJECT_ID:        Your Google Cloud Project ID
+# GCP_REGION:            GCP Region (e.g., us-central1)
+# CLOUD_SQL_CONNECTION:  Cloud SQL connection string for the database
+#
+# FIREBASE_API_KEY:      Firebase API Key for the frontend
+# FIREBASE_PROJECT_ID:   Firebase Project ID
+#
+# TROUBLESHOOTING:
+# ----------------
+# If you see "Invalid private key" error:
+#   1. Go to GCP Console > IAM & Admin > Service Accounts
+#   2. Select your service account > Keys > Add Key > Create new key (JSON)
+#   3. Update the GCP_SA_KEY secret in GitHub with the new key contents
+#
+# =============================================================================
+
 name: Deploy to Google Cloud
 
 on:
@@ -102,7 +130,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate GCP Credentials
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "::error::GCP_SA_KEY secret is not set. Please configure a valid GCP Service Account JSON key."
+            echo "To fix this:"
+            echo "1. Go to GCP Console > IAM & Admin > Service Accounts"
+            echo "2. Select your service account > Keys > Add Key > Create new key (JSON)"
+            echo "3. Update the GCP_SA_KEY secret in GitHub repository settings"
+            exit 1
+          fi
+
       - name: Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
@@ -145,7 +185,15 @@ jobs:
     environment: production
     
     steps:
+      - name: Validate GCP Credentials
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "::error::GCP_SA_KEY secret is not set. See workflow documentation for setup instructions."
+            exit 1
+          fi
+
       - name: Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
@@ -207,7 +255,15 @@ jobs:
     needs: deploy
     
     steps:
+      - name: Validate GCP Credentials
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "::error::GCP_SA_KEY secret is not set. See workflow documentation for setup instructions."
+            exit 1
+          fi
+
       - name: Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
