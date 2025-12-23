@@ -24,7 +24,7 @@
 .login-logo {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: var(--accent-color);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -76,8 +76,8 @@
 }
 
 .form-group input:focus {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .form-group input::placeholder {
@@ -86,7 +86,7 @@
 
 .login-btn {
     padding: 14px 24px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: var(--accent-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -99,7 +99,7 @@
 
 .login-btn:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .login-btn:disabled {
@@ -108,11 +108,11 @@
 }
 
 .login-error {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: var(--status-error-bg);
+    border: 1px solid var(--status-error);
     border-radius: 8px;
     padding: 12px;
-    color: #ef4444;
+    color: var(--status-error);
     font-size: 14px;
     text-align: center;
 }
@@ -125,7 +125,7 @@
 }
 
 .login-footer a {
-    color: var(--accent-primary);
+    color: var(--accent-color);
     text-decoration: none;
     font-weight: 500;
 }

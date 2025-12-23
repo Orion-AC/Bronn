@@ -31,13 +31,13 @@
 }
 
 .workflow-editor-btn.secondary {
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
 }
 
 .workflow-editor-btn.secondary:hover {
-  background: var(--bg-hover);
+  background: var(--bg-card-hover);
 }
 
 .workflow-breadcrumb {
@@ -50,7 +50,7 @@
 }
 
 .workflow-breadcrumb a {
-  color: var(--accent-primary);
+  color: var(--accent-color);
   text-decoration: none;
 }
 

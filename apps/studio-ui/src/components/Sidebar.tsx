@@ -48,11 +48,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
                     <span>Dashboard</span>
                 </div>
                 <div
-                    className={`nav-item ${isActive('/apps') ? 'active' : ''}`}
-                    onClick={() => navigate('/apps')}
+                    className={`nav-item ${location.pathname.startsWith('/workspaces') || location.pathname.startsWith('/workspace') ? 'active' : ''}`}
+                    onClick={() => navigate('/workspaces')}
                 >
                     <FolderOpen size={18} />
-                    <span>Apps</span>
+                    <span>Workspaces</span>
                 </div>
                 <div
                     className={`nav-item ${isActive('/agents') ? 'active' : ''}`}
@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
                 </div>
                 <div
                     className={`nav-item ${isActive('/workflows') ? 'active' : ''}`}
-                    onClick={() => window.open('http://localhost:8080', '_blank')}
+                    onClick={() => navigate('/workspaces')}
                 >
                     <Workflow size={18} />
                     <span>Workflows</span>

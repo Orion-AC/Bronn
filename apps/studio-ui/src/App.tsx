@@ -9,15 +9,20 @@ import { Agents } from './pages/Agents';
 import { Workflows } from './pages/Workflows';
 import { WorkflowEditor } from './pages/WorkflowEditor';
 import { Deployments } from './pages/Deployments';
+import { WorkspaceEditor } from './pages/WorkspaceEditor';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ActivepiecesSSO } from './pages/ActivepiecesSSO';
+import { onAuthStateChange, getIdToken, verifyTokenWithBackend, logout as firebaseLogout } from './lib/firebase';
 import './App.css';
 
 interface User {
+  id?: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
+  display_name?: string;
+  avatar_url?: string;
 }
 
 function App() {
@@ -25,26 +30,77 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for existing session on mount
+  // Check for existing session on mount and listen for auth state changes
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    // First, check localStorage for existing session
+    const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
-    if (token && storedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(storedUser));
+    if (storedToken && storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+        setIsAuthenticated(true);
+      } catch (e) {
+        // Invalid stored data, clear it
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
-    setLoading(false);
+
+    // Subscribe to Firebase auth state changes
+    const unsubscribe = onAuthStateChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // User is signed in, get fresh token
+          const idToken = await getIdToken(true);
+          if (idToken) {
+            // Verify with backend and sync user data
+            const data = await verifyTokenWithBackend(idToken);
+
+            // Update stored data
+            localStorage.setItem('token', idToken);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            setUser(data.user);
+            setIsAuthenticated(true);
+          }
+        } catch (error) {
+          console.error('Auth state change error:', error);
+          // Token verification failed, clear auth state
+          handleLogout();
+        }
+      } else {
+        // User is signed out
+        setIsAuthenticated(false);
+        setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('activepieces_token');
+      }
+      setLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
-  const handleLogin = (token: string, userData: User) => {
+  const handleLogin = (_token: string, userData: User) => {
     setIsAuthenticated(true);
     setUser(userData);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Sign out from Firebase
+      await firebaseLogout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    // Clear local state
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('activepieces_token');
     setIsAuthenticated(false);
     setUser(null);
   };
@@ -59,7 +115,19 @@ function App() {
         background: 'var(--bg-primary)',
         color: 'var(--text-secondary)'
       }}>
-        Loading...
+        <div style={{ textAlign: 'center' }}>
+          <div className="loading-spinner" style={{
+            width: 40,
+            height: 40,
+            border: '3px solid rgba(255,255,255,0.1)',
+            borderTop: '3px solid var(--accent-primary)',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          Loading...
+        </div>
       </div>
     );
   }
@@ -94,7 +162,8 @@ function App() {
                 <Sidebar user={user} onLogout={handleLogout} />
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/apps" element={<Apps />} />
+                  <Route path="/workspaces" element={<Apps />} />
+                  <Route path="/workspace/:id" element={<WorkspaceEditor />} />
                   <Route path="/agents" element={<Agents />} />
                   <Route path="/workflows" element={<Workflows />} />
                   <Route path="/workflows/sso" element={<ActivepiecesSSO />} />

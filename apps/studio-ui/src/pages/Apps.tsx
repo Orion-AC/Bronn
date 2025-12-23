@@ -7,13 +7,15 @@ import {
     Plus,
     MoreHorizontal
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/PageLayout';
 import './Apps.css';
 
 export const Apps: React.FC = () => {
+    const navigate = useNavigate();
     return (
         <PageLayout
-            title="Apps"
+            title="Workspaces"
             actions={
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <div className="title-dots">
@@ -28,7 +30,7 @@ export const Apps: React.FC = () => {
                     <input
                         type="text"
                         className="apps-search"
-                        placeholder="Search apps..."
+                        placeholder="Search workspaces..."
                     />
                 </div>
 
@@ -71,7 +73,7 @@ export const Apps: React.FC = () => {
                 </div>
 
                 {/* Existing Project Card */}
-                <div className="app-card">
+                <div className="app-card" onClick={() => navigate('/workspace/joyful-journey')}>
                     <div className="card-thumbnail">
                         {/* Folder/Heart icon placeholder */}
                         <div style={{ opacity: 0.2 }}>
@@ -90,7 +92,7 @@ export const Apps: React.FC = () => {
                 </div>
 
                 {/* Another Project Card */}
-                <div className="app-card">
+                <div className="app-card" onClick={() => navigate('/workspace/orion-dashboard')}>
                     <div className="card-thumbnail">
                         {/* Placeholder */}
                     </div>

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 import models, database
-from routers import activepieces, auth, agents, workflows, sso
+from routers import activepieces, auth, agents, workflows, sso, live_logs, flows_proxy
 import monitoring
 
 models.Base.metadata.create_all(bind=database.engine)
@@ -37,6 +37,8 @@ app.include_router(activepieces.router)
 app.include_router(agents.router)
 app.include_router(workflows.router)
 app.include_router(sso.router)
+app.include_router(live_logs.router)
+app.include_router(flows_proxy.router)
 
 
 # Health check
