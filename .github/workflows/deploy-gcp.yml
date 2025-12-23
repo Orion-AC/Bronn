@@ -203,6 +203,17 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Validate Build Outputs
+        run: |
+          if [ -z "${{ needs.build.outputs.backend-image }}" ]; then
+            echo "::error::Backend Docker image was not built! Check the 'build' job outputs."
+            exit 1
+          fi
+          if [ -z "${{ needs.build.outputs.frontend-image }}" ]; then
+            echo "::error::Frontend Docker image was not built! Check the 'build' job outputs."
+            exit 1
+          fi
+
       - name: Deploy Backend to Cloud Run
         run: |
           gcloud run deploy bronn-backend \
