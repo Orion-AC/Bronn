@@ -4,18 +4,12 @@ from sqlalchemy.orm import Session
 from typing import List
 import models, database
 from routers import activepieces, auth, agents, workflows, sso, live_logs, flows_proxy
-import monitoring
-
 models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(
     title="Bronn API",
     description="Bronn Backend with Activepieces Integration",
     version="1.0.0"
 )
-
-
-# Setup Monitoring (OpenTelemetry)
-monitoring.setup_monitoring(app, database.engine)
 
 # Enable CORS
 app.add_middleware(
