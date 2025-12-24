@@ -15,7 +15,31 @@ from cryptography.hazmat.backends import default_backend
 from jose import jwt
 
 # Directory to store signing keys
-KEYS_DIR = Path(os.getenv("SIGNING_KEYS_DIR", "/app/data/keys"))
+def _get_keys_dir() -> Path:
+    """Get the directory for storing signing keys, with fallback for test environments."""
+    import tempfile
+    
+    env_dir = os.getenv("SIGNING_KEYS_DIR")
+    if env_dir:
+        return Path(env_dir)
+    # Default to /app/data/keys in production, fall back to ./data/keys if /app is not writable
+    default_path = Path("/app/data/keys")
+    try:
+        default_path.mkdir(parents=True, exist_ok=True)
+        return default_path
+    except (PermissionError, OSError):
+        # Fallback to local directory (useful for tests and local development)
+        fallback_path = Path("./data/keys")
+        try:
+            fallback_path.mkdir(parents=True, exist_ok=True)
+            return fallback_path
+        except (PermissionError, OSError):
+            # Final fallback to temp directory
+            temp_path = Path(tempfile.gettempdir()) / "bronn-keys"
+            temp_path.mkdir(parents=True, exist_ok=True)
+            return temp_path
+
+KEYS_DIR = _get_keys_dir()
 
 
 def ensure_keys_dir():
