@@ -21,18 +21,25 @@ def init_firebase() -> bool:
     """
     Initialize Firebase Admin SDK with appropriate credentials.
     
-    Works with:
+    Works identically across all environments:
     - Local development: GOOGLE_APPLICATION_CREDENTIALS env var
-    - Cloud Run: Application Default Credentials
+    - GitHub Actions: GOOGLE_APPLICATION_CREDENTIALS pointing to SA JSON
+    - Cloud Run: Application Default Credentials (attached SA)
     
     Returns True if initialization successful.
     """
     global _firebase_initialized
     
+    # Idempotent guard - prevents crashes on Gunicorn/Uvicorn worker forks
     if _firebase_initialized or firebase_admin._apps:
         return True
     
     try:
+        # Get project ID (required, no fallback for environment consistency)
+        project_id = os.getenv("FIREBASE_PROJECT_ID") or os.getenv("GCP_PROJECT_ID")
+        if not project_id:
+            raise RuntimeError("FIREBASE_PROJECT_ID or GCP_PROJECT_ID must be set")
+        
         # Check for explicit service account file
         cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         
@@ -44,12 +51,10 @@ def init_firebase() -> bool:
             logger.info("Initializing Firebase with Application Default Credentials")
             cred = credentials.ApplicationDefault()
         
-        firebase_admin.initialize_app(cred, {
-            'projectId': os.getenv('GCP_PROJECT_ID', 'salesos-473014')
-        })
+        firebase_admin.initialize_app(cred, {"projectId": project_id})
         
         _firebase_initialized = True
-        logger.info("Firebase Admin SDK initialized successfully")
+        logger.info(f"Firebase Admin SDK initialized successfully for project: {project_id}")
         return True
         
     except Exception as e:

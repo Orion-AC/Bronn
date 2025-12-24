@@ -10,7 +10,14 @@ import httpx
 from typing import Optional, Tuple
 
 
-ACTIVEPIECES_URL = os.getenv("ACTIVEPIECES_URL", "http://activepieces:80")
+ACTIVEPIECES_URL = os.getenv("ACTIVEPIECES_URL", "")
+
+# Check if we're in a Cloud Run environment without Activepieces configured
+_is_cloud_run = os.getenv("K_SERVICE") is not None  # Cloud Run sets K_SERVICE
+_has_local_ap_url = "activepieces:80" in ACTIVEPIECES_URL or "localhost" in ACTIVEPIECES_URL
+
+# If on Cloud Run with a local/docker URL, Activepieces is not available
+ACTIVEPIECES_AVAILABLE = bool(ACTIVEPIECES_URL) and not (_is_cloud_run and _has_local_ap_url)
 
 
 async def sync_user_to_activepieces(email: str, password: str, first_name: str, last_name: str) -> Tuple[bool, Optional[str]]:
@@ -18,6 +25,10 @@ async def sync_user_to_activepieces(email: str, password: str, first_name: str, 
     Create or update a user in Activepieces.
     Returns (success, error_message)
     """
+    # Skip sync if Activepieces is not available in this environment
+    if not ACTIVEPIECES_AVAILABLE:
+        return True, None
+    
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             # Try to sign up the user in Activepieces
@@ -51,6 +62,10 @@ async def get_activepieces_token(email: str, password: str) -> Tuple[Optional[st
     Get an Activepieces access token for a user.
     Returns (token, error_message)
     """
+    # Skip if Activepieces is not available in this environment
+    if not ACTIVEPIECES_AVAILABLE:
+        return None, "Activepieces not configured"
+    
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             response = await client.post(
@@ -75,6 +90,10 @@ async def ensure_user_in_activepieces(email: str, password: str, first_name: str
     Ensure user exists in Activepieces and return their token.
     If user doesn't exist, create them first.
     """
+    # Skip if Activepieces is not available in this environment
+    if not ACTIVEPIECES_AVAILABLE:
+        return None
+    
     # First try to login
     token, _ = await get_activepieces_token(email, password)
     if token:

@@ -19,16 +19,22 @@ def get_database_url() -> str:
     """
     Get the appropriate database URL based on environment.
     
+    Supports three connection modes:
+    1. Cloud SQL Unix Socket (Cloud Run production)
+    2. Cloud SQL Auth Proxy (Local dev with real Cloud SQL)
+    3. Standard TCP/SQLite (Local dev with local database)
+    
     Priority:
-    1. Cloud SQL (if CLOUD_SQL_CONNECTION_NAME is set)
-    2. DATABASE_URL environment variable
-    3. Local SQLite fallback
+    1. Cloud SQL Unix socket (if CLOUD_SQL_CONNECTION_NAME is set)
+    2. Cloud SQL Auth Proxy (if DB_HOST starts with 127.0.0.1)
+    3. DATABASE_URL environment variable
+    4. Local SQLite fallback
     """
     # Check for Cloud SQL connection (Cloud Run)
     cloud_sql_connection = os.getenv("CLOUD_SQL_CONNECTION_NAME")
     
     if cloud_sql_connection:
-        # Running on Cloud Run with Cloud SQL
+        # Running on Cloud Run with Cloud SQL via Unix socket
         db_user = os.getenv("DB_USER", "bronn")
         db_pass = os.getenv("DB_PASS", "")
         db_name = os.getenv("DB_NAME", "bronn")
@@ -37,17 +43,29 @@ def get_database_url() -> str:
         socket_path = f"/cloudsql/{cloud_sql_connection}"
         
         url = f"postgresql+pg8000://{db_user}:{db_pass}@/{db_name}?unix_sock={socket_path}/.s.PGSQL.5432"
-        logger.info(f"Using Cloud SQL: {cloud_sql_connection}")
+        logger.info(f"Using Cloud SQL Unix socket (Cloud Run): {cloud_sql_connection}")
+        return url
+    
+    # Check for Cloud SQL Auth Proxy (local dev with real Cloud SQL)
+    db_host = os.getenv("DB_HOST")
+    if db_host and db_host.startswith("127.0.0.1"):
+        db_user = os.getenv("DB_USER", "bronn")
+        db_pass = os.getenv("DB_PASS", "")
+        db_name = os.getenv("DB_NAME", "bronn")
+        db_port = os.getenv("DB_PORT", "5432")
+        
+        url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+        logger.info("Using Cloud SQL Auth Proxy (Local Development)")
         return url
     
     # Check for explicit DATABASE_URL
     database_url = os.getenv("DATABASE_URL")
     if database_url:
-        logger.info("Using DATABASE_URL from environment")
+        logger.info("Using DATABASE_URL from environment (standard TCP connection)")
         return database_url
     
     # Fallback to local SQLite
-    logger.info("Using local SQLite database")
+    logger.info("Using local SQLite database (fallback)")
     return "sqlite:///./bronn.db"
 
 

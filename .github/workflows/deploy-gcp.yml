@@ -48,9 +48,25 @@ jobs:
     name: Test Backend
     runs-on: ubuntu-latest
     
+    env:
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-sa.json
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Write Firebase Service Account
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/firebase-sa.json
+
+      - name: Validate Firebase Environment
+        run: |
+          echo "Validating Firebase environment..."
+          test -n "$FIREBASE_PROJECT_ID" || { echo "::error::FIREBASE_PROJECT_ID is not set"; exit 1; }
+          test -f "$GOOGLE_APPLICATION_CREDENTIALS" || { echo "::error::Firebase SA file not found"; exit 1; }
+          echo "✅ Firebase environment validated"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -228,6 +244,7 @@ jobs:
             --allow-unauthenticated \
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION }} \
             --set-env-vars="GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
+            --set-env-vars="FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" \
             --set-env-vars="CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION }}" \
             --set-env-vars="DB_USER=bronn" \
             --set-env-vars="DB_NAME=bronn" \
