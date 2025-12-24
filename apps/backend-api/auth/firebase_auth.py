@@ -43,12 +43,17 @@ def init_firebase() -> bool:
         # Check for explicit service account file
         cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         
-        if cred_path and os.path.exists(cred_path):
-            logger.info(f"Initializing Firebase with service account: {cred_path}")
-            cred = credentials.Certificate(cred_path)
+        if cred_path:
+            if os.path.exists(cred_path):
+                logger.info(f"Initializing Firebase with service account file: {cred_path}")
+                cred = credentials.Certificate(cred_path)
+            else:
+                logger.error(f"GOOGLE_APPLICATION_CREDENTIALS is set to '{cred_path}' but file was NOT found in container.")
+                logger.error("Hint: Ensure the service account file is inside 'apps/backend-api/' or mapped via volume in docker-compose.yml")
+                return False
         else:
             # Use default credentials (works on Cloud Run automatically)
-            logger.info("Initializing Firebase with Application Default Credentials")
+            logger.info("Initializing Firebase with Application Default Credentials (ADC)")
             cred = credentials.ApplicationDefault()
         
         firebase_admin.initialize_app(cred, {"projectId": project_id})
