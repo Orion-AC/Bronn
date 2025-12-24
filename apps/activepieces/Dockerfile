@@ -10,31 +10,34 @@ ENV LANG=en_US.UTF-8 \
 # Install all system dependencies in a single layer with cache mounts
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    for i in {1..5}; do \
     apt-get update && \
-    apt-get install -y --no-install-recommends \
-        openssh-client \
-        python3 \
-        g++ \
-        build-essential \
-        git \
-        poppler-utils \
-        poppler-data \
-        procps \
-        locales \
-        locales-all \
-        unzip \
-        curl \
-        ca-certificates \
-        libcap-dev && \
+    apt-get install -y --no-install-recommends --fix-missing \
+    openssh-client \
+    python3 \
+    g++ \
+    build-essential \
+    git \
+    poppler-utils \
+    poppler-data \
+    procps \
+    locales \
+    locales-all \
+    unzip \
+    curl \
+    ca-certificates \
+    libcap-dev && \
+    break || (sleep 10 && echo "Retrying..."); \
+    done && \
     yarn config set python /usr/bin/python3
 
 RUN export ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
-      curl -fSL https://github.com/oven-sh/bun/releases/download/bun-v1.3.1/bun-linux-x64-baseline.zip -o bun.zip; \
+    curl -fSL https://github.com/oven-sh/bun/releases/download/bun-v1.3.1/bun-linux-x64-baseline.zip -o bun.zip; \
     elif [ "$ARCH" = "aarch64" ]; then \
-      curl -fSL https://github.com/oven-sh/bun/releases/download/bun-v1.3.1/bun-linux-aarch64.zip -o bun.zip; \
+    curl -fSL https://github.com/oven-sh/bun/releases/download/bun-v1.3.1/bun-linux-aarch64.zip -o bun.zip; \
     fi
-    
+
 RUN unzip bun.zip \
     && mv bun-*/bun /usr/local/bin/bun \
     && chmod +x /usr/local/bin/bun \
@@ -85,8 +88,11 @@ WORKDIR /usr/src/app
 # Install Nginx and gettext in a single layer with cache mount
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    for i in {1..5}; do \
     apt-get update && \
-    apt-get install -y --no-install-recommends nginx gettext
+    apt-get install -y --no-install-recommends --fix-missing nginx gettext && \
+    break || (sleep 10 && echo "Retrying..."); \
+    done
 
 # Copy static configuration files first (better layer caching)
 COPY nginx.react.conf /etc/nginx/nginx.conf

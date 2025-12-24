@@ -9,7 +9,7 @@ FROM python:3.11-slim as builder
 WORKDIR /app
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -26,7 +26,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/*
