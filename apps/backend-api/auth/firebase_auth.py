@@ -45,25 +45,25 @@ def init_firebase() -> bool:
         
         if cred_path:
             if os.path.exists(cred_path):
-                logger.info(f"Initializing Firebase with service account file: {cred_path}")
+                print(f"Initializing Firebase with service account file: {cred_path}")
                 cred = credentials.Certificate(cred_path)
             else:
-                logger.error(f"GOOGLE_APPLICATION_CREDENTIALS is set to '{cred_path}' but file was NOT found in container.")
-                logger.error("Hint: Ensure the service account file is inside 'apps/backend-api/' or mapped via volume in docker-compose.yml")
+                print(f"GOOGLE_APPLICATION_CREDENTIALS is set to '{cred_path}' but file was NOT found in container.")
+                print("Hint: Ensure the service account file is inside 'apps/backend-api/' or mapped via volume in docker-compose.yml")
                 return False
         else:
             # Use default credentials (works on Cloud Run automatically)
-            logger.info("Initializing Firebase with Application Default Credentials (ADC)")
+            print("Initializing Firebase with Application Default Credentials (ADC)")
             cred = credentials.ApplicationDefault()
         
         firebase_admin.initialize_app(cred, {"projectId": project_id})
         
         _firebase_initialized = True
-        logger.info(f"Firebase Admin SDK initialized successfully for project: {project_id}")
+        print(f"Firebase Admin SDK initialized successfully for project: {project_id}")
         return True
         
     except Exception as e:
-        logger.error(f"Failed to initialize Firebase: {e}")
+        print(f"Failed to initialize Firebase: {e}")
         return False
 
 
@@ -79,7 +79,7 @@ def verify_firebase_token(id_token: str) -> Optional[Dict[str, Any]]:
         Payload includes: uid, email, email_verified, name, picture, etc.
     """
     if not init_firebase():
-        logger.error("Firebase not initialized, cannot verify token")
+        print("Firebase not initialized, cannot verify token")
         return None
     
     try:
@@ -98,7 +98,7 @@ def verify_firebase_token(id_token: str) -> Optional[Dict[str, Any]]:
         logger.warning(f"Invalid token: {e}")
         return None
     except Exception as e:
-        logger.error(f"Token verification failed: {e}")
+        print(f"Token verification failed: {e}")
         return None
 
 
@@ -129,7 +129,7 @@ def get_firebase_user(uid: str) -> Optional[Dict[str, Any]]:
         logger.warning(f"User not found: {uid}")
         return None
     except Exception as e:
-        logger.error(f"Failed to get user: {e}")
+        print(f"Failed to get user: {e}")
         return None
 
 
@@ -155,7 +155,7 @@ def get_firebase_user_by_email(email: str) -> Optional[Dict[str, Any]]:
     except auth.UserNotFoundError:
         return None
     except Exception as e:
-        logger.error(f"Failed to get user by email: {e}")
+        print(f"Failed to get user by email: {e}")
         return None
 
 
@@ -185,7 +185,7 @@ def create_firebase_user(
             display_name=display_name or email.split('@')[0],
             email_verified=False
         )
-        logger.info(f"Created Firebase user: {user.uid}")
+        print(f"Created Firebase user: {user.uid}")
         return user.uid
         
     except auth.EmailAlreadyExistsError:
@@ -194,7 +194,7 @@ def create_firebase_user(
         existing = get_firebase_user_by_email(email)
         return existing.get('uid') if existing else None
     except Exception as e:
-        logger.error(f"Failed to create user: {e}")
+        print(f"Failed to create user: {e}")
         return None
 
 
@@ -226,11 +226,11 @@ def update_firebase_user(
         
         if update_args:
             auth.update_user(uid, **update_args)
-            logger.info(f"Updated Firebase user: {uid}")
+            print(f"Updated Firebase user: {uid}")
         return True
         
     except Exception as e:
-        logger.error(f"Failed to update user: {e}")
+        print(f"Failed to update user: {e}")
         return False
 
 
@@ -245,13 +245,13 @@ def delete_firebase_user(uid: str) -> bool:
     
     try:
         auth.delete_user(uid)
-        logger.info(f"Deleted Firebase user: {uid}")
+        print(f"Deleted Firebase user: {uid}")
         return True
     except auth.UserNotFoundError:
         logger.warning(f"User not found for deletion: {uid}")
         return True  # Already deleted
     except Exception as e:
-        logger.error(f"Failed to delete user: {e}")
+        print(f"Failed to delete user: {e}")
         return False
 
 
@@ -275,7 +275,7 @@ def create_custom_token(uid: str, claims: Optional[Dict] = None) -> Optional[str
         token = auth.create_custom_token(uid, claims or {})
         return token.decode('utf-8') if isinstance(token, bytes) else token
     except Exception as e:
-        logger.error(f"Failed to create custom token: {e}")
+        print(f"Failed to create custom token: {e}")
         return None
 
 
@@ -298,10 +298,10 @@ def set_custom_claims(uid: str, claims: Dict) -> bool:
     
     try:
         auth.set_custom_user_claims(uid, claims)
-        logger.info(f"Set custom claims for user {uid}: {claims}")
+        print(f"Set custom claims for user {uid}: {claims}")
         return True
     except Exception as e:
-        logger.error(f"Failed to set custom claims: {e}")
+        print(f"Failed to set custom claims: {e}")
         return False
 
 
