@@ -183,6 +183,7 @@ jobs:
             --build-arg VITE_FIREBASE_AUTH_DOMAIN=${{ env.GCP_PROJECT_ID }}.firebaseapp.com \
             --build-arg VITE_FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }} \
             --build-arg VITE_BACKEND_URL=https://bronn-backend-lrlvype7ma-uc.a.run.app \
+            --build-arg VITE_ACTIVEPIECES_URL=https://activepieces-lrlvype7ma-uc.a.run.app \
             -f apps/studio-ui/Dockerfile.prod apps/studio-ui
           docker push "$IMAGE"
           echo "::notice::Frontend image pushed: $IMAGE"
@@ -248,6 +249,7 @@ jobs:
             --set-env-vars="CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION }}" \
             --set-env-vars="DB_USER=bronn" \
             --set-env-vars="DB_NAME=bronn" \
+            --set-env-vars="ACTIVEPIECES_URL=https://activepieces-lrlvype7ma-uc.a.run.app" \
             --set-secrets="DB_PASS=bronn-db-password:latest" \
             --min-instances=0 \
             --max-instances=10 \
@@ -267,6 +269,31 @@ jobs:
             --memory=256Mi \
             --cpu=1
 
+      - name: Deploy Activepieces to Cloud Run
+        run: |
+          gcloud run deploy activepieces \
+            --image=${{ env.ARTIFACT_REGISTRY }}/activepieces:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION }} \
+            --set-env-vars="AP_POSTGRES_HOST=/cloudsql/${{ secrets.CLOUD_SQL_CONNECTION }}" \
+            --set-env-vars="AP_POSTGRES_DATABASE=activepieces" \
+            --set-env-vars="AP_POSTGRES_USERNAME=bronn" \
+            --set-env-vars="AP_DATABASE_TYPE=POSTGRES" \
+            --set-env-vars="AP_FRONTEND_URL=https://activepieces-lrlvype7ma-uc.a.run.app" \
+            --set-env-vars="AP_QUEUE_MODE=MEMORY" \
+            --set-env-vars="AP_EXECUTION_MODE=SANDBOX_CODE_ONLY" \
+            --set-env-vars="AP_APP_TITLE=Bronn Workflows" \
+            --set-secrets="AP_POSTGRES_PASSWORD=bronn-db-password:latest" \
+            --set-secrets="AP_ENCRYPTION_KEY=ap-encryption-key:latest" \
+            --set-secrets="AP_JWT_SECRET=ap-jwt-secret:latest" \
+            --min-instances=0 \
+            --max-instances=10 \
+            --memory=1Gi \
+            --cpu=1 \
+            --timeout=300
+
       - name: Output Service URLs
         id: urls
         run: |
@@ -280,6 +307,8 @@ jobs:
           echo "|---------|-----|" >> $GITHUB_STEP_SUMMARY
           echo "| Backend | $BACKEND_URL |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend | $FRONTEND_URL |" >> $GITHUB_STEP_SUMMARY
+          ACTIVEPIECES_URL=$(gcloud run services describe activepieces --region=${{ env.GCP_REGION }} --format='value(status.url)')
+          echo "| Activepieces | $ACTIVEPIECES_URL |" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
   # Job 5: Smoke Tests
@@ -342,6 +371,24 @@ jobs:
           done
           
           echo "❌ Frontend check failed after 5 attempts"
+          exit 1
+
+      - name: Test Activepieces Health
+        run: |
+          AP_URL=$(gcloud run services describe activepieces --region=${{ env.GCP_REGION }} --format='value(status.url)')
+          echo "Testing Activepieces at $AP_URL/api/v1/health"
+          
+          for i in {1..5}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" "$AP_URL/api/v1/health" || echo "000")
+            if [ "$response" == "200" ]; then
+              echo "✅ Activepieces health check passed"
+              exit 0
+            fi
+            echo "Attempt $i: Got status $response, retrying..."
+            sleep 10
+          done
+          
+          echo "❌ Activepieces health check failed after 5 attempts"
           exit 1
 
       - name: Deployment Summary
