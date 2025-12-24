@@ -1,13 +1,36 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional, Any
+import logging
 import models, database
 from auth.users import get_current_user
+from auth.signing_key import get_public_key
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/workflows",
     tags=["workflows"]
 )
+
+
+@router.get("/engine/public-key")
+def get_engine_public_key():
+    """
+    Retrieve the public key for Activepieces to verify JWTs.
+    This endpoint is called by Activepieces to fetch the signing key.
+    """
+    try:
+        key_id, public_key = get_public_key()
+        return {"keyId": key_id, "publicKey": public_key}
+    except Exception as e:
+        logger.error(f"Failed to retrieve public key: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve public key: {str(e)}"
+        )
+
 
 @router.get("", response_model=List[Any])
 def read_workflows(
