@@ -50,12 +50,15 @@ shell-db:
 # =============================================================================
 # Development Commands
 # =============================================================================
+# Force rebase strategy for all local updates from GitHub
+pull-rebase:
+	git pull --rebase origin main
 
 dev-studio:
 	cd apps/studio-ui && npm run dev
 
 dev-backend:
-	cd apps/backend-api && uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+	cd apps/backend-api && uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 dev-db:
 	docker compose up postgres redis -d

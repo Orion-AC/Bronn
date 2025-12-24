@@ -19,10 +19,6 @@ Bronn is an enterprise-grade platform that integrates autonomous AI agents with 
 - **Audit Logs**: Trigger-based auditing for all agent and workflow modifications, ensuring compliance.
 - **SSO Bridge**: OIDC/SAML integration (Google Workspace, Okta, Azure AD) via Authlib.
 
-### 4. High-Scale Observability
-- **OpenTelemetry**: Full instrumentation of the FastAPI backend for distributed tracing and performance metrics.
-- **Monitoring Stack**: Integrated Prometheus and Grafana for real-time visualization of agent latency and workflow success rates.
-
 ## 🏗 Architecture
 
 Bronn follows a modern, containerized microservices architecture:
@@ -31,47 +27,53 @@ Bronn follows a modern, containerized microservices architecture:
 - **Backend**: FastAPI (Python) with SQLAlchemy.
 - **Orchestration**: Activepieces (embedded via iframe + JWT).
 - **Persistence**: PostgreSQL (shared) with Redis (Activepieces worker).
-- **Observability**: OTel Collector -> Prometheus -> Grafana.
 
-## 🛠 Getting Started
+## 🛠️ Development Workflow
+
+### GitHub as Single Source of Truth
+This repository enforces a **GitHub-first** philosophy. The `main` branch on GitHub is the canonical source for all configurations, secrets, and deployment artifacts.
+
+1.  **Mandatory Rebase**: Never use `git merge` or standard `git pull`. Always rebase from `main`.
+    ```bash
+    make pull-rebase
+    ```
+2.  **Strict Production Parity**: Local services are strictly aligned with Google Cloud Run production. Unused or experimental services are prohibited unless explicitly documented and mirrored in production.
+3.  **CI/CD Deployment**: Production deployments (Cloud Run) are triggered **strictly via GitHub Actions** from the `main` branch.
+
+## 🚀 Getting Started
 
 ### Prerequisites
 - Docker & Docker Compose
-- Node.js 18+
+- Node.js 20+
 - Python 3.11+
+- Google Cloud SDK (for production management)
 
-### Local Development
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Orion-AC/Bronn.git
-   cd Bronn
-   ```
-
-2. **Start the infrastructure**:
-   ```bash
-   make up
-   ```
-   *This will spin up PostgreSQL, Redis, Activepieces, and the Observability stack.*
-
-3. **Run the Backend**:
-   ```bash
-   cd apps/backend-api
-   pip install -r requirements.txt
-   uvicorn main:app --reload
-   ```
-
-4. **Run the Studio UI**:
-   ```bash
-   cd apps/studio-ui
-   npm install
-   npm run dev
-   ```
+### Local Setup
+1.  **Clone the repo**:
+    ```bash
+    git clone https://github.com/Orion-AC/Bronn.git
+    cd Bronn
+    ```
+2.  **Configure Environment**:
+    ```bash
+    cp .env.example .env
+    # Edit .env with your local credentials
+    ```
+3.  **Start Services**:
+    ```bash
+    make up
+    ```
+4.  **Access Apps**:
+    - **Frontend (Studio)**: [http://localhost:5173](http://localhost:5173)
+    - **Backend (API)**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+    - **Activepieces**: [http://localhost:8080](http://localhost:8080)
 
 ## 🚢 CI/CD & Deployment
-Bronn is optimized for production deployment on **AWS**:
+Bronn is optimized for production deployment on **Google Cloud Platform (GCP)**:
 
-- **GitHub Actions**: Automated testing, ECR image builds, and SSM-based deployment.
-- **Terraform/Infrastructure**: Least-privilege IAM roles and SSM Parameter Store for secret management.
+- **Cloud Run**: Managed serverless containers for both Backend and Frontend.
+- **Cloud SQL**: Managed PostgreSQL 14 instance.
+- **GitHub Actions**: Automated testing and deployment to GCP on push to `main`.
 
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

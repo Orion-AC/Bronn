@@ -64,6 +64,18 @@ class AuthResponse(BaseModel):
     activepieces_token: Optional[str] = None
 
 
+class EmbedTokenRequest(BaseModel):
+    """Request for Activepieces embed token."""
+    project_id: str = "default"
+
+
+class EmbedTokenResponse(BaseModel):
+    """Response containing Activepieces provisioning JWT."""
+    token: str
+    instance_url: str
+    expires_in_seconds: int = 300
+
+
 # =============================================================================
 # Firebase Token Verification
 # =============================================================================
@@ -295,6 +307,87 @@ async def get_ap_token(
             status_code=500,
             detail=f"Activepieces authentication failed: {str(e)}"
         )
+
+
+# =============================================================================
+# Firebase to Activepieces Token Exchange (Provisioning JWT)
+# =============================================================================
+
+@router.post("/firebase-to-activepieces", response_model=EmbedTokenResponse)
+async def exchange_firebase_for_activepieces(
+    request: EmbedTokenRequest,
+    authorization: str = Header(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Exchange a Firebase ID token for an Activepieces provisioning JWT.
+    
+    This is the core authentication federation endpoint. It:
+    1. Verifies the Firebase ID token
+    2. Retrieves user info from the database
+    3. Generates an RS256-signed Activepieces JWT with v3 claims
+    4. Returns the token for use with the Activepieces Embedding SDK
+    
+    The returned token is short-lived (5 minutes) and should be immediately
+    passed to activepieces.configure() for SDK initialization.
+    """
+    import os
+    
+    # Extract token from "Bearer <token>"
+    token = authorization.replace("Bearer ", "").strip()
+    
+    if not token:
+        raise HTTPException(status_code=401, detail="No token provided")
+    
+    # Verify with Firebase
+    decoded = verify_firebase_token(token)
+    if not decoded:
+        raise HTTPException(status_code=401, detail="Invalid or expired Firebase token")
+    
+    firebase_uid = decoded["uid"]
+    
+    # Get user from database
+    user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+    if not user:
+        # Auto-provision user on first access
+        user = User.from_firebase_token(decoded)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    # Map Bronn roles to Activepieces roles
+    if user.is_admin:
+        ap_role = "ADMIN"
+    else:
+        ap_role = "EDITOR"  # Default role for regular users
+    
+    # Generate Activepieces provisioning JWT (RS256 signed)
+    try:
+        ap_embed_token = create_activepieces_jwt(
+            user_id=firebase_uid,  # Use Firebase UID as external user ID
+            project_id=request.project_id,
+            first_name=user.first_name or user.display_name or "User",
+            last_name=user.last_name or "",
+            role=ap_role,
+            expires_in_minutes=5  # Short-lived for security
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate Activepieces token: {str(e)}"
+        )
+    
+    # Get Activepieces instance URL from environment
+    instance_url = os.getenv("ACTIVEPIECES_URL", "http://localhost:8080")
+    # For client access, translate internal Docker URLs
+    if "activepieces:80" in instance_url:
+        instance_url = "http://localhost:8080"
+    
+    return EmbedTokenResponse(
+        token=ap_embed_token,
+        instance_url=instance_url,
+        expires_in_seconds=300
+    )
 
 
 # =============================================================================

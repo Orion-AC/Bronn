@@ -93,10 +93,14 @@ def create_activepieces_jwt(
     first_name: str = "User",
     last_name: str = "",
     role: str = "EDITOR",
-    expires_in_hours: int = 24
+    expires_in_minutes: int = 5
 ) -> str:
     """
-    Create a JWT token for Activepieces authentication.
+    Create a JWT token for Activepieces authentication (provisioning token).
+    
+    This token is short-lived (default 5 minutes) because it's immediately
+    exchanged for a session cookie by the Activepieces SDK. A short expiry
+    minimizes the window for token interception.
     
     Args:
         user_id: The Bronn user ID (will be externalUserId in AP)
@@ -104,15 +108,15 @@ def create_activepieces_jwt(
         first_name: User's first name
         last_name: User's last name
         role: User role - EDITOR, VIEWER, or ADMIN
-        expires_in_hours: Token expiration time
+        expires_in_minutes: Token expiration time (default 5 minutes)
         
     Returns:
         Signed JWT token string
     """
     key_id, private_key = get_or_create_signing_key()
     
-    # Calculate expiration
-    exp = datetime.utcnow() + timedelta(hours=expires_in_hours)
+    # Calculate expiration (short-lived for security)
+    exp = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
     
     # Build payload according to Activepieces embedding spec
     payload = {

@@ -171,6 +171,21 @@ jobs:
           docker push "$IMAGE"
           echo "::notice::Frontend image pushed: $IMAGE"
 
+      - name: Build & Push Activepieces White-Label Image
+        id: build-activepieces
+        run: |
+          IMAGE="${{ env.ARTIFACT_REGISTRY }}/activepieces:${{ github.sha }}"
+          echo "Building custom Activepieces image with Bronn branding: $IMAGE"
+          
+          # Build using existing Activepieces Dockerfile with our customizations
+          # The index.html and nginx config have been modified for white-labeling
+          docker build -t "$IMAGE" \
+            --build-arg AP_EXECUTION_MODE=SANDBOX_CODE_ONLY \
+            --build-arg AP_QUEUE_MODE=MEMORY \
+            -f apps/activepieces/Dockerfile apps/activepieces
+          docker push "$IMAGE"
+          echo "::notice::Activepieces image pushed: $IMAGE"
+
   # ============================================================================
   # Job 4: Deploy to Cloud Run
   # ============================================================================
