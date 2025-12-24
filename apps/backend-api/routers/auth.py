@@ -25,6 +25,7 @@ from auth.activepieces_sync import (
     get_activepieces_token,
     ensure_user_in_activepieces
 )
+from auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -225,29 +226,9 @@ async def register(
 
 @router.get("/me")
 async def get_me(
-    authorization: Optional[str] = Header(None),
-    db: Session = Depends(get_db)
+    user: User = Depends(get_current_user)
 ):
     """Get current user info from Firebase token."""
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    # Extract token from "Bearer <token>"
-    try:
-        token = authorization.split(" ")[1]
-    except IndexError:
-        raise HTTPException(status_code=401, detail="Invalid authorization header")
-    
-    # Verify with Firebase
-    decoded = verify_firebase_token(token)
-    if not decoded:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    # Get user from database
-    user = db.query(User).filter(User.firebase_uid == decoded["uid"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found in database")
-    
     return user.to_dict()
 
 
@@ -257,37 +238,18 @@ async def get_me(
 
 @router.get("/activepieces-token")
 async def get_ap_token(
-    authorization: Optional[str] = Header(None),
-    db: Session = Depends(get_db)
+    user: User = Depends(get_current_user)
 ):
     """
     Get Activepieces access token for the current user.
     
     Used for SSO between Bronn and Activepieces.
     """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    try:
-        token = authorization.split(" ")[1]
-    except IndexError:
-        raise HTTPException(status_code=401, detail="Invalid authorization header")
-    
-    # Verify with Firebase
-    decoded = verify_firebase_token(token)
-    if not decoded:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    # Get user from database
-    user = db.query(User).filter(User.firebase_uid == decoded["uid"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
     # Get Activepieces token
     try:
         ap_token = await ensure_user_in_activepieces(
             email=user.email,
-            password=decoded["uid"][:16],
+            password=user.firebase_uid[:16],
             first_name=user.first_name or "",
             last_name=user.last_name or ""
         )

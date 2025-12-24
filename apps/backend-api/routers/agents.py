@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 import models, database
-from auth.users import get_current_user
-import os
+from auth.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/api/agents",
@@ -23,21 +22,9 @@ class AgentInvokeResponse(BaseModel):
 
 @router.get("", response_model=List[Any])
 def read_agents(
-    authorization: Optional[str] = Header(None),
+    user: models.User = Depends(get_current_user),
     db: Session = Depends(database.get_db)
 ):
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    token = authorization.split(" ")[1]
-    user = get_current_user(token)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    # Set DB context for RLS
-    tenant_id = user.get("tenant_id", "default")
-    database.set_db_context(db, tenant_id, user["email"])
-    
     return db.query(models.Agent).all()
 
 class AgentCreate(BaseModel):
@@ -49,20 +36,10 @@ class AgentCreate(BaseModel):
 @router.post("", response_model=Any)
 def create_agent(
     agent_data: AgentCreate, 
-    authorization: Optional[str] = Header(None),
+    user: models.User = Depends(get_current_user),
     db: Session = Depends(database.get_db)
 ):
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    token = authorization.split(" ")[1]
-    user = get_current_user(token)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    # Set DB context for RLS & auditing
-    tenant_id = user.get("tenant_id", "default")
-    database.set_db_context(db, tenant_id, user["email"])
+    tenant_id = "default"  # In a multi-tenant setup, this would come from user profile/header
     
     agent = models.Agent(
         name=agent_data.name, 

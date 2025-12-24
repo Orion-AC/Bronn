@@ -41,12 +41,15 @@ async def websocket_endpoint(websocket: WebSocket, workspace_id: str):
         }))
         
         while True:
-            # Keep the connection open
-            await asyncio.sleep(10)
-            await websocket.receive_text()
+            # Wait for any message from client or just keep it open
+            # receive_text() is the standard way to keep the connection alive
+            # and detect disconnection immediately.
+            data = await websocket.receive_text()
+            # We don't really need to do anything with the data for now
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-    except Exception:
+    except Exception as e:
+        print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
 
 async def stream_log(workspace_id: str, message: str, level: str = "INFO"):

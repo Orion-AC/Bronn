@@ -21,26 +21,44 @@ ACTIVEPIECES_API_KEY = os.getenv("ACTIVEPIECES_API_KEY", "")
 
 async def _ap_request(method: str, path: str, data: Optional[Dict] = None) -> Any:
     """Helper to make authenticated requests to Activepieces."""
+    if not ACTIVEPIECES_API_KEY:
+        # Don't crash with "Bearer " header, return a clear error instead
+        raise HTTPException(
+            status_code=503, 
+            detail="Activepieces is not configured in this environment (missing ACTIVEPIECES_API_KEY)"
+        )
+
     headers = {
         "Authorization": f"Bearer {ACTIVEPIECES_API_KEY}",
         "Content-Type": "application/json"
     }
     url = f"{ACTIVEPIECES_URL}/api/v1{path}"
     
-    async with httpx.AsyncClient() as client:
-        if method == "GET":
-            response = await client.get(url, headers=headers)
-        elif method == "POST":
-            response = await client.post(url, headers=headers, json=data)
-        elif method == "DELETE":
-            response = await client.delete(url, headers=headers)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
-        
-        if response.status_code >= 400:
-            raise HTTPException(status_code=response.status_code, detail=response.text)
-        
-        return response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            if method == "GET":
+                response = await client.get(url, headers=headers)
+            elif method == "POST":
+                response = await client.post(url, headers=headers, json=data)
+            elif method == "DELETE":
+                response = await client.delete(url, headers=headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+            
+            if response.status_code >= 400:
+                # Provide cleaner error message for the frontend
+                error_detail = response.text
+                try:
+                    error_json = response.json()
+                    if "message" in error_json:
+                        error_detail = error_json["message"]
+                except:
+                    pass
+                raise HTTPException(status_code=response.status_code, detail=error_detail)
+            
+            return response.json()
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=503, detail=f"Failed to connect to Activepieces: {str(e)}")
 
 
 @router.get("/flows")
