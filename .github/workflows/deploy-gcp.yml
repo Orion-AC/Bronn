@@ -283,6 +283,10 @@ jobs:
 
       - name: Deploy Activepieces to Cloud Run
         run: |
+          # Get project number for dynamic service URLs
+          PROJECT_NUMBER=$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)')
+          AP_URL="https://activepieces-${PROJECT_NUMBER}.${{ env.GCP_REGION }}.run.app"
+          
           gcloud run deploy activepieces \
             --image=${{ env.ARTIFACT_REGISTRY }}/activepieces:${{ github.sha }} \
             --region=${{ env.GCP_REGION }} \
@@ -292,8 +296,9 @@ jobs:
             --set-env-vars="AP_POSTGRES_HOST=/cloudsql/${{ secrets.CLOUD_SQL_CONNECTION }}" \
             --set-env-vars="AP_POSTGRES_DATABASE=activepieces" \
             --set-env-vars="AP_POSTGRES_USERNAME=bronn" \
+            --set-env-vars="AP_POSTGRES_USE_SSL=false" \
             --set-env-vars="AP_DATABASE_TYPE=POSTGRES" \
-            --set-env-vars="AP_FRONTEND_URL=https://activepieces-480969272523.us-central1.run.app" \
+            --set-env-vars="AP_FRONTEND_URL=$AP_URL" \
             --set-env-vars="AP_QUEUE_MODE=MEMORY" \
             --set-env-vars="AP_EXECUTION_MODE=SANDBOX_CODE_ONLY" \
             --set-env-vars="AP_APP_TITLE=Bronn Workflows" \
