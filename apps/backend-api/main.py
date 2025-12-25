@@ -4,7 +4,18 @@ from sqlalchemy.orm import Session
 from typing import List
 import models, database
 from routers import activepieces, auth, agents, workflows, sso, live_logs, flows_proxy
-models.Base.metadata.create_all(bind=database.engine)
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Initialize database tables (non-blocking for health checks)
+try:
+    models.Base.metadata.create_all(bind=database.engine)
+    logger.info("Database tables created successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize database tables: {e}")
+    logger.info("App will start anyway - database may connect later")
+
 app = FastAPI(
     title="Bronn API",
     description="Bronn Backend with Activepieces Integration",
