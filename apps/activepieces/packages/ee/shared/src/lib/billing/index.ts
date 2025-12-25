@@ -94,7 +94,7 @@ export const STANDARD_CLOUD_PLAN: PlatformPlanWithOnlyLimits = {
 
 export const OPEN_SOURCE_PLAN: PlatformPlanWithOnlyLimits = {
     embeddingEnabled: false,
-    globalConnectionsEnabled: false,
+    globalConnectionsEnabled: true,  // BRONN: Enable for self-hosted
     customRolesEnabled: false,
     mcpsEnabled: true,
     tablesEnabled: true,
@@ -107,18 +107,19 @@ export const OPEN_SOURCE_PLAN: PlatformPlanWithOnlyLimits = {
     analyticsEnabled: true,
     showPoweredBy: false,
     auditLogEnabled: false,
-    managePiecesEnabled: false,
+    managePiecesEnabled: true,  // BRONN: Enable for self-hosted
     manageTemplatesEnabled: false,
     customAppearanceEnabled: false,
     teamProjectsLimit: TeamProjectsLimit.NONE,
     projectRolesEnabled: false,
     customDomainsEnabled: false,
-    apiKeysEnabled: false,
+    apiKeysEnabled: true,  // BRONN: CRITICAL - Enable API keys for self-hosted
     ssoEnabled: false,
     stripeCustomerId: undefined,
     stripeSubscriptionId: undefined,
     stripeSubscriptionStatus: undefined,
 }
+
 
 export const APPSUMO_PLAN = (planName: PlanName): PlatformPlanWithOnlyLimits => ({
     ...STANDARD_CLOUD_PLAN,

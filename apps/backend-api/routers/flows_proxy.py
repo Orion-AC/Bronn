@@ -15,9 +15,17 @@ router = APIRouter(
     tags=["flows-proxy"]
 )
 
-ACTIVEPIECES_URL = os.getenv("ACTIVEPIECES_URL", "http://localhost:8080")
+# ACTIVEPIECES_URL must be set via environment - no localhost fallback
+ACTIVEPIECES_URL = os.getenv("ACTIVEPIECES_URL", "")
 # This should be an API key generated in the Activepieces admin console
 ACTIVEPIECES_API_KEY = os.getenv("ACTIVEPIECES_API_KEY", "")
+
+# Startup validation
+if not ACTIVEPIECES_URL:
+    import logging
+    logging.getLogger(__name__).warning(
+        "ACTIVEPIECES_URL not configured. Flows proxy will not work."
+    )
 
 async def _ap_request(method: str, path: str, data: Optional[Dict] = None) -> Any:
     """Helper to make authenticated requests to Activepieces."""

@@ -263,11 +263,13 @@ jobs:
             --set-env-vars="ACTIVEPIECES_URL=https://activepieces-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app" \
             --set-env-vars="CORS_ORIGINS=$FRONTEND_URL" \
             --set-secrets="DB_PASS=bronn-db-password:latest" \
+            --set-secrets="ACTIVEPIECES_API_KEY=activepieces-api-key:latest" \
             --min-instances=0 \
             --max-instances=10 \
             --memory=512Mi \
             --cpu=1 \
             --timeout=300
+
 
       - name: Deploy Frontend to Cloud Run
         run: |
@@ -293,6 +295,8 @@ jobs:
             --platform=managed \
             --allow-unauthenticated \
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION }} \
+            --set-env-vars="AP_EDITION=ce" \
+            --set-env-vars="AP_ENVIRONMENT=prod" \
             --set-env-vars="AP_POSTGRES_HOST=/cloudsql/${{ secrets.CLOUD_SQL_CONNECTION }}" \
             --set-env-vars="AP_POSTGRES_DATABASE=activepieces" \
             --set-env-vars="AP_POSTGRES_USERNAME=bronn" \
@@ -302,6 +306,7 @@ jobs:
             --set-env-vars="AP_QUEUE_MODE=MEMORY" \
             --set-env-vars="AP_EXECUTION_MODE=SANDBOX_CODE_ONLY" \
             --set-env-vars="AP_APP_TITLE=Bronn Workflows" \
+            --set-env-vars="AP_BRONN_AUTH_MODE=managed" \
             --set-secrets="AP_POSTGRES_PASSWORD=bronn-db-password:latest" \
             --set-secrets="AP_ENCRYPTION_KEY=ap-encryption-key:latest" \
             --set-secrets="AP_JWT_SECRET=ap-jwt-secret:latest" \
@@ -310,6 +315,7 @@ jobs:
             --memory=1Gi \
             --cpu=1 \
             --timeout=300
+
 
       - name: Output Service URLs
         id: urls
@@ -407,6 +413,27 @@ jobs:
           
           echo "❌ Activepieces health check failed after 5 attempts"
           exit 1
+
+      - name: Verify Auth Bypass Active
+        run: |
+          AP_URL=$(gcloud run services describe activepieces --region=${{ env.GCP_REGION }} --format='value(status.url)')
+          echo "Verifying native auth is blocked at $AP_URL/v1/authentication/sign-in"
+          
+          # Native auth should return 403 when AP_BRONN_AUTH_MODE=managed
+          response=$(curl -s -o /tmp/auth-response.json -w "%{http_code}" \
+            -X POST "$AP_URL/api/v1/authentication/sign-in" \
+            -H "Content-Type: application/json" \
+            -d '{"email":"test@test.com","password":"test"}' || echo "000")
+          
+          if [ "$response" == "403" ]; then
+            echo "✅ Auth bypass verified - native login blocked (403)"
+          elif [ "$response" == "404" ]; then
+            echo "✅ Auth bypass verified - route not registered (404)"
+          else
+            echo "⚠️ Warning: Unexpected status $response (expected 403 or 404)"
+            cat /tmp/auth-response.json || true
+            # Don't fail - this is informational for now
+          fi
 
       - name: Deployment Summary
         run: |

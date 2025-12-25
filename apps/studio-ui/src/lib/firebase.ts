@@ -39,6 +39,11 @@ let app: FirebaseApp;
 let auth: Auth;
 
 try {
+    console.log('Firebase Config Debug:', {
+        apiKey: firebaseConfig.apiKey ? '***' + firebaseConfig.apiKey.slice(-4) : 'UNDEFINED',
+        authDomain: firebaseConfig.authDomain,
+        projectId: firebaseConfig.projectId
+    });
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     console.log('Firebase initialized successfully');

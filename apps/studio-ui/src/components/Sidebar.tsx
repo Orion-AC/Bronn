@@ -30,7 +30,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
     return (
         <aside className="sidebar">
             <div className="brand-section">
-                <div className="brand-logo">
+                <div
+                    className="brand-logo"
+                    onClick={() => navigate('/')}
+                    style={{ cursor: 'pointer' }}
+                    title="Go to Landing Page"
+                >
                     <Hexagon size={20} fill="#5B5FFF" color="#5B5FFF" />
                     Bronn
                 </div>
@@ -41,8 +46,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
 
             <nav className="nav-group">
                 <div
-                    className={`nav-item ${isActive('/') ? 'active' : ''}`}
-                    onClick={() => navigate('/')}
+                    className={`nav-item ${isActive('/home') ? 'active' : ''}`}
+                    onClick={() => navigate('/home')}
                 >
                     <LayoutDashboard size={18} />
                     <span>Dashboard</span>

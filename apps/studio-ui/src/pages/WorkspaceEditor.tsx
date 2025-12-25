@@ -17,6 +17,15 @@ import { Agents } from './Agents';
 
 type Tab = 'workflows' | 'agents' | 'code';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+
+// Convert HTTP URL to WebSocket URL
+const getWebSocketUrl = (baseUrl: string, workspaceId: string): string => {
+    const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
+    const urlWithoutProtocol = baseUrl.replace(/^https?:\/\//, '');
+    return `${wsProtocol}://${urlWithoutProtocol}/api/ws/logs/${workspaceId}`;
+};
+
 export const WorkspaceEditor: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [activeTab, setActiveTab] = useState<Tab>('workflows');
@@ -24,17 +33,64 @@ export const WorkspaceEditor: React.FC = () => {
     const [logs, setLogs] = useState<Array<{ time: string, type: string, message: string }>>([
         { time: new Date().toLocaleTimeString(), type: 'SYSTEM', message: 'Workspace initialized. Ready.' }
     ]);
+    const [wsConnected, setWsConnected] = useState(false);
 
-    // WebSocket for live logs
+    // WebSocket for live logs with retry logic
     useEffect(() => {
-        const ws = new WebSocket(`ws://localhost:8000/api/ws/logs/${id || 'default'}`);
+        let ws: WebSocket | null = null;
+        let retryCount = 0;
+        const maxRetries = 3;
+        const retryDelay = 2000;
+        let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+        let isMounted = true;
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            setLogs(prev => [...prev, data]);
+        const connect = () => {
+            if (!isMounted || !BACKEND_URL) return;
+
+            const wsUrl = getWebSocketUrl(BACKEND_URL, id || 'default');
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                if (isMounted) {
+                    setWsConnected(true);
+                    retryCount = 0;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                if (isMounted) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        setLogs(prev => [...prev, data]);
+                    } catch (e) {
+                        // Ignore malformed messages
+                    }
+                }
+            };
+
+            ws.onclose = () => {
+                if (isMounted) {
+                    setWsConnected(false);
+                    // Retry connection if not at max retries
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        retryTimeout = setTimeout(connect, retryDelay);
+                    }
+                }
+            };
+
+            ws.onerror = () => {
+                // onclose will be called after onerror
+            };
         };
 
-        return () => ws.close();
+        connect();
+
+        return () => {
+            isMounted = false;
+            if (retryTimeout) clearTimeout(retryTimeout);
+            if (ws) ws.close();
+        };
     }, [id]);
 
     const handleRun = () => {

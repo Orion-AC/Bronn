@@ -1,109 +1,129 @@
 """
-Activepieces User Sync and SSO
+Activepieces Managed Authentication
 
-Handles syncing users between Bronn and Activepieces,
-and provides SSO login tokens.
+Handles authentication between Bronn and Activepieces using the managed-auth
+flow. Instead of creating users in Activepieces' native auth system, we:
+
+1. Generate a JWT using Bronn's signing key (via signing_key.py)
+2. Exchange the JWT with Activepieces' /v1/managed-authn/external-token endpoint
+3. Get back an Activepieces session token
+
+This approach:
+- Keeps Bronn as the single source of truth for auth
+- Works with AP_BRONN_AUTH_MODE=managed (native auth disabled)
+- Aligns with Activepieces embedding spec v3
 """
 
 import os
 import httpx
 from typing import Optional, Tuple
 
+from auth.signing_key import create_activepieces_jwt
+
 
 ACTIVEPIECES_URL = os.getenv("ACTIVEPIECES_URL", "")
 
-# Check if we're in a Cloud Run environment without Activepieces configured
-_is_cloud_run = os.getenv("K_SERVICE") is not None  # Cloud Run sets K_SERVICE
+# Check if Activepieces is available in this environment
+_is_cloud_run = os.getenv("K_SERVICE") is not None
 _has_local_ap_url = "activepieces:80" in ACTIVEPIECES_URL or "localhost" in ACTIVEPIECES_URL
-
-# If on Cloud Run with a local/docker URL, Activepieces is not available
 ACTIVEPIECES_AVAILABLE = bool(ACTIVEPIECES_URL) and not (_is_cloud_run and _has_local_ap_url)
 
 
-async def sync_user_to_activepieces(email: str, password: str, first_name: str, last_name: str) -> Tuple[bool, Optional[str]]:
+async def get_activepieces_session(
+    user_id: str,
+    project_id: str,
+    first_name: str = "User",
+    last_name: str = "",
+    role: str = "EDITOR"
+) -> Tuple[Optional[str], Optional[str]]:
     """
-    Create or update a user in Activepieces.
-    Returns (success, error_message)
-    """
-    # Skip sync if Activepieces is not available in this environment
-    if not ACTIVEPIECES_AVAILABLE:
-        return True, None
+    Get an Activepieces session token using managed authentication.
     
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        try:
-            # Try to sign up the user in Activepieces
-            response = await client.post(
-                f"{ACTIVEPIECES_URL}/v1/authentication/sign-up",
-                json={
-                    "email": email,
-                    "password": password,
-                    "firstName": first_name,
-                    "lastName": last_name,
-                    "trackEvents": False,
-                    "newsLetter": False
-                }
-            )
-            
-            if response.status_code == 200 or response.status_code == 201:
-                return True, None
-            elif response.status_code == 409:
-                # User already exists, that's fine
-                return True, None
-            else:
-                return False, f"Failed to sync user: {response.status_code}"
-        except Exception as e:
-            # Don't fail Bronn registration if Activepieces is down
-            print(f"Warning: Could not sync user to Activepieces: {e}")
-            return True, None
-
-
-async def get_activepieces_token(email: str, password: str) -> Tuple[Optional[str], Optional[str]]:
+    This is the PRIMARY and ONLY way to authenticate with Activepieces
+    when AP_BRONN_AUTH_MODE=managed is set.
+    
+    Args:
+        user_id: Bronn user ID (becomes externalUserId)
+        project_id: Bronn project/workspace ID (becomes externalProjectId)
+        first_name: User's first name
+        last_name: User's last name
+        role: User role (EDITOR, VIEWER, ADMIN)
+    
+    Returns:
+        (token, error_message) tuple
     """
-    Get an Activepieces access token for a user.
-    Returns (token, error_message)
-    """
-    # Skip if Activepieces is not available in this environment
     if not ACTIVEPIECES_AVAILABLE:
         return None, "Activepieces not configured"
     
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        try:
+    try:
+        # Step 1: Generate JWT using Bronn's signing key
+        external_token = create_activepieces_jwt(
+            user_id=user_id,
+            project_id=project_id,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            expires_in_minutes=5
+        )
+        
+        # Step 2: Exchange JWT for Activepieces session
+        # NOTE: Activepieces nginx routes /api/* to the Node.js backend
+        async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
-                f"{ACTIVEPIECES_URL}/v1/authentication/sign-in",
-                json={
-                    "email": email,
-                    "password": password
-                }
+                f"{ACTIVEPIECES_URL}/api/v1/managed-authn/external-token",
+                json={"externalAccessToken": external_token}
             )
             
             if response.status_code == 200:
                 data = response.json()
                 return data.get("token"), None
             else:
-                return None, f"Invalid credentials for Activepieces"
-        except Exception as e:
-            return None, f"Could not connect to Activepieces: {e}"
+                error_detail = response.text[:200] if response.text else "Unknown error"
+                return None, f"Managed auth failed: {response.status_code} - {error_detail}"
+                
+    except Exception as e:
+        return None, f"Could not authenticate with Activepieces: {e}"
 
 
-async def ensure_user_in_activepieces(email: str, password: str, first_name: str, last_name: str) -> Optional[str]:
+async def ensure_user_in_activepieces(
+    user_id: str,
+    project_id: str,
+    first_name: str,
+    last_name: str
+) -> Optional[str]:
     """
-    Ensure user exists in Activepieces and return their token.
-    If user doesn't exist, create them first.
+    Ensure user can access Activepieces and return their session token.
+    
+    Uses managed auth - user is automatically created in Activepieces
+    if they don't exist (handled by the managed-authn endpoint).
     """
-    # Skip if Activepieces is not available in this environment
-    if not ACTIVEPIECES_AVAILABLE:
-        return None
+    token, error = await get_activepieces_session(
+        user_id=user_id,
+        project_id=project_id,
+        first_name=first_name,
+        last_name=last_name
+    )
     
-    # First try to login
-    token, _ = await get_activepieces_token(email, password)
-    if token:
-        return token
+    if error:
+        print(f"Warning: Could not get Activepieces session: {error}")
     
-    # User doesn't exist, create them
-    success, _ = await sync_user_to_activepieces(email, password, first_name, last_name)
-    if not success:
-        return None
-    
-    # Now login again
-    token, _ = await get_activepieces_token(email, password)
     return token
+
+
+# =============================================================================
+# DEPRECATED: Legacy functions - DO NOT USE
+# =============================================================================
+# The following functions are kept for backward compatibility but will
+# fail when AP_BRONN_AUTH_MODE=managed is set (which blocks native auth).
+
+async def sync_user_to_activepieces(email: str, password: str, first_name: str, last_name: str) -> Tuple[bool, Optional[str]]:
+    """DEPRECATED: Use get_activepieces_session() with managed auth instead."""
+    print("Warning: sync_user_to_activepieces is deprecated and will fail with managed auth")
+    return False, "Native auth is disabled - use managed auth"
+
+
+async def get_activepieces_token(email: str, password: str) -> Tuple[Optional[str], Optional[str]]:
+    """DEPRECATED: Use get_activepieces_session() with managed auth instead."""
+    print("Warning: get_activepieces_token is deprecated and will fail with managed auth")
+    return None, "Native auth is disabled - use managed auth"
+

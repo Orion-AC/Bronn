@@ -81,8 +81,8 @@ const TelemetryProvider = ({ children }: TelemetryProviderProps) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      activepiecesVersion: currentVersion,
-      activepiecesEnvironment: environment,
+      bronnVersion: currentVersion,
+      bronnEnvironment: environment,
       ui: 'react',
     });
 
@@ -98,8 +98,8 @@ const TelemetryProvider = ({ children }: TelemetryProviderProps) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        activepiecesVersion: currentVersion,
-        activepiecesEnvironment: environment,
+        bronnVersion: currentVersion,
+        bronnEnvironment: environment,
       });
     });
     setAnalytics(newAnalytics);
@@ -134,8 +134,8 @@ interface TelemetryContextType {
 }
 
 const TelemetryContext = React.createContext<TelemetryContextType>({
-  capture: () => {},
-  reset: () => {},
+  capture: () => { },
+  reset: () => { },
 });
 
 export const useTelemetry = () => React.useContext(TelemetryContext);

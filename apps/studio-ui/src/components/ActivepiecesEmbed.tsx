@@ -95,9 +95,11 @@ export const ActivepiecesEmbed: React.FC<ActivepiecesEmbedProps> = ({
 
             const { token: apToken, instance_url: instanceUrl } = await response.json();
 
-            // For local development, ensure we use the browser-accessible URL
-            const clientInstanceUrl = instanceUrl.includes('activepieces:80')
-                ? 'http://localhost:8080'
+            // Use browser-accessible Activepieces URL from env
+            // In Docker, instanceUrl might be internal (activepieces:80), so we use the env var
+            const activepieces_browser_url = import.meta.env.VITE_ACTIVEPIECES_URL || 'http://localhost:8080';
+            const clientInstanceUrl = instanceUrl.includes('activepieces:')
+                ? activepieces_browser_url
                 : instanceUrl;
 
             // Configure Activepieces SDK with white-label options

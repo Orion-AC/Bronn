@@ -11,6 +11,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
+import os
 
 from database import get_db
 from auth.firebase_auth import (
@@ -21,9 +22,8 @@ from auth.firebase_auth import (
 from models.user import User
 from auth.signing_key import create_activepieces_jwt
 from auth.activepieces_sync import (
-    sync_user_to_activepieces,
-    get_activepieces_token,
-    ensure_user_in_activepieces
+    ensure_user_in_activepieces,
+    get_activepieces_session
 )
 from auth.dependencies import get_current_user
 
@@ -133,10 +133,10 @@ async def verify_token(
     # Get Activepieces token for SSO (optional, may fail if not configured)
     ap_token = None
     try:
-        # For Activepieces SSO, we need to ensure user exists there too
+        # Use managed auth - user is auto-provisioned in Activepieces
         ap_token = await ensure_user_in_activepieces(
-            email=email,
-            password=firebase_uid[:16],  # Use part of Firebase UID as password
+            user_id=firebase_uid,
+            project_id="default",
             first_name=user.first_name or "",
             last_name=user.last_name or ""
         )
@@ -203,13 +203,13 @@ async def register(
     db.commit()
     db.refresh(user)
     
-    # Sync to Activepieces
+    # Sync to Activepieces via managed auth
     try:
-        await sync_user_to_activepieces(
-            request.email,
-            request.password,
-            request.first_name or "",
-            request.last_name or ""
+        await ensure_user_in_activepieces(
+            user_id=firebase_uid,
+            project_id="default",
+            first_name=request.first_name or "",
+            last_name=request.last_name or ""
         )
     except Exception as e:
         print(f"Activepieces sync warning: {e}")
@@ -245,11 +245,11 @@ async def get_ap_token(
     
     Used for SSO between Bronn and Activepieces.
     """
-    # Get Activepieces token
+    # Get Activepieces token using managed auth
     try:
         ap_token = await ensure_user_in_activepieces(
-            email=user.email,
-            password=user.firebase_uid[:16],
+            user_id=user.firebase_uid,
+            project_id="default",
             first_name=user.first_name or "",
             last_name=user.last_name or ""
         )
@@ -262,7 +262,7 @@ async def get_ap_token(
         
         return {
             "token": ap_token,
-            "redirect_url": "http://localhost:8080"
+            "redirect_url": os.getenv("VITE_ACTIVEPIECES_URL", os.getenv("ACTIVEPIECES_URL", ""))
         }
     except Exception as e:
         raise HTTPException(
@@ -340,10 +340,8 @@ async def exchange_firebase_for_activepieces(
         )
     
     # Get Activepieces instance URL from environment
-    instance_url = os.getenv("ACTIVEPIECES_URL", "http://localhost:8080")
-    # For client access, translate internal Docker URLs
-    if "activepieces:80" in instance_url:
-        instance_url = "http://localhost:8080"
+    # VITE_ACTIVEPIECES_URL is the browser-accessible URL
+    instance_url = os.getenv("VITE_ACTIVEPIECES_URL", os.getenv("ACTIVEPIECES_URL", ""))
     
     return EmbedTokenResponse(
         token=ap_embed_token,

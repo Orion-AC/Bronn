@@ -150,14 +150,14 @@ const PreviewImage = ({ todoType }: { todoType: TodoType }) => {
     todoType === TodoType.INTERNAL ? 'Todos flow' : 'External channel flow';
   const title =
     todoType === TodoType.INTERNAL
-      ? t('Preview (Activepieces Todos)')
+      ? t('Preview (Internal Todos)')
       : t('Preview (External channel)');
   const description =
     todoType === TodoType.INTERNAL
       ? t('Users will manage tasks directly in our interface')
       : t(
-          'Send notifications with approval links via external channels like Slack, Teams or Email. Best for collaborating with external stakeholders.',
-        );
+        'Send notifications with approval links via external channels like Slack, Teams or Email. Best for collaborating with external stakeholders.',
+      );
   return (
     <div className="overflow-hidden p-3 w-full h-full">
       <div className="flex flex-col items-center h-[480px]">

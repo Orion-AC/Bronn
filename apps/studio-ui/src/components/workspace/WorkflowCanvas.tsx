@@ -15,6 +15,8 @@ interface FlowsResponse {
     data: Flow[];
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+
 export const WorkflowCanvas: React.FC = () => {
     const [flows, setFlows] = useState<Flow[]>([]);
     const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ export const WorkflowCanvas: React.FC = () => {
     useEffect(() => {
         const fetchFlows = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/flows-proxy/flows');
+                const response = await fetch(`${BACKEND_URL}/api/flows-proxy/flows`);
                 if (!response.ok) throw new Error('Failed to fetch flows');
                 const data: FlowsResponse = await response.json();
                 setFlows(data.data || []);
@@ -38,7 +40,7 @@ export const WorkflowCanvas: React.FC = () => {
 
     const handleTrigger = async (flowId: string) => {
         try {
-            await fetch(`http://localhost:8000/api/flows-proxy/flows/${flowId}/run`, {
+            await fetch(`${BACKEND_URL}/api/flows-proxy/flows/${flowId}/run`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({})

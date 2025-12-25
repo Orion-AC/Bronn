@@ -10,10 +10,8 @@ import qs from 'qs';
 import { authenticationSession } from '@/lib/authentication-session';
 import { ApErrorParams, ErrorCode, isNil } from '@activepieces/shared';
 
-export const API_BASE_URL =
-  import.meta.env.MODE === 'cloud'
-    ? 'https://cloud.activepieces.com'
-    : window.location.origin;
+// Bronn white-label: Always use current origin, never cloud.activepieces.com
+export const API_BASE_URL = window.location.origin;
 export const API_URL = `${API_BASE_URL}/api`;
 
 const disallowedRoutes = [

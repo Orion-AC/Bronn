@@ -1,21 +1,15 @@
 import { CreateTrialLicenseKeyRequestBody } from '@activepieces/shared';
 
 import { api } from './api';
-import { flagsApi } from './flags-api';
 
 export const requestTrialApi = {
   createKey(params: CreateTrialLicenseKeyRequestBody): Promise<void> {
     return api.post<void>(`/v1/license-keys`, params);
   },
-  async contactSales(params: ContactSalesRequest): Promise<void> {
-    const flags = await flagsApi.getAll();
-    return api.post<void>(
-      `https://sales.activepieces.com/submit-inapp-contact-form`,
-      {
-        ...params,
-        flags: flags,
-      },
-    );
+  // Bronn white-label: External contact forms disabled
+  async contactSales(_params: ContactSalesRequest): Promise<void> {
+    console.warn('Contact sales is disabled in Bronn white-label deployment');
+    throw new Error('Contact sales is not available');
   },
 };
 
@@ -26,3 +20,4 @@ type ContactSalesRequest = {
   goal: string;
   numberOfEmployees: string;
 };
+

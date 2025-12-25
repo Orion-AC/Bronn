@@ -13,6 +13,7 @@ import { WorkspaceEditor } from './pages/WorkspaceEditor';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ActivepiecesSSO } from './pages/ActivepiecesSSO';
+import { LandingPage } from './pages/LandingPage';
 import { onAuthStateChange, getIdToken, verifyTokenWithBackend, logout as firebaseLogout } from './lib/firebase';
 import './App.css';
 
@@ -140,7 +141,7 @@ function App() {
           path="/login"
           element={
             isAuthenticated ?
-              <Navigate to="/" replace /> :
+              <Navigate to="/home" replace /> :
               <Login onLogin={handleLogin} />
           }
         />
@@ -148,8 +149,16 @@ function App() {
           path="/register"
           element={
             isAuthenticated ?
-              <Navigate to="/" replace /> :
+              <Navigate to="/home" replace /> :
               <Register onLogin={handleLogin} />
+          }
+        />
+
+        {/* Public Landing Page */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? <Navigate to="/home" replace /> : <LandingPage />
           }
         />
 
@@ -161,7 +170,7 @@ function App() {
               <div className="app-main">
                 <Sidebar user={user} onLogout={handleLogout} />
                 <Routes>
-                  <Route path="/" element={<Home />} />
+                  <Route path="/home" element={<Home />} />
                   <Route path="/workspaces" element={<Apps />} />
                   <Route path="/workspace/:id" element={<WorkspaceEditor />} />
                   <Route path="/agents" element={<Agents />} />

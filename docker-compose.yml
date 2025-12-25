@@ -73,6 +73,38 @@ services:
       redis:
         condition: service_healthy
     env_file: .env
+    environment:
+      # Core Configuration
+      AP_EDITION: ce
+      AP_ENVIRONMENT: prod
+
+      # Database Configuration (uses Docker service name)
+      AP_POSTGRES_DATABASE: activepieces
+      AP_POSTGRES_HOST: postgres
+      AP_POSTGRES_PORT: 5432
+      AP_POSTGRES_USERNAME: ${POSTGRES_USER:-bronn}
+      AP_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bronn_dev_password_change_in_prod}
+
+      # Redis Configuration (uses Docker service name)
+      AP_REDIS_HOST: redis
+      AP_REDIS_PORT: 6379
+
+      # URL Configuration
+      AP_FRONTEND_URL: ${AP_FRONTEND_URL:-http://localhost:8080}
+
+      # Execution Mode (SANDBOX_CODE_ONLY for multi-tenant safety)
+      AP_EXECUTION_MODE: ${AP_EXECUTION_MODE:-SANDBOX_CODE_ONLY}
+
+      # Queue Mode (MEMORY for stateless, REDIS for persistence)
+      AP_QUEUE_MODE: ${AP_QUEUE_MODE:-MEMORY}
+
+      # Bronn White-Label
+      AP_BRONN_AUTH_MODE: managed
+      AP_APP_TITLE: ${AP_APP_TITLE:-Bronn Workflows}
+
+      # Secrets (required - generate with: openssl rand -hex 16)
+      AP_ENCRYPTION_KEY: ${AP_ENCRYPTION_KEY}
+      AP_JWT_SECRET: ${AP_JWT_SECRET}
     volumes:
       - activepieces_cache:/usr/src/app/cache
     networks:
@@ -80,7 +112,13 @@ services:
       - bronn-external # Needs internet access for initial setup
     # Expose Activepieces for embedded SDK access from browser
     ports:
-      - "8080:80"
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8080/api/v1/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # ---------------------------------------------------------------------------
   # Bronn Backend - FastAPI
@@ -104,7 +142,7 @@ services:
     environment:
       PORT: 8000
       DATABASE_URL: ${DATABASE_URL:-postgresql://bronn:vZ2cCk2T5C9XOtiV@postgres:5432/bronn}
-      ACTIVEPIECES_URL: http://activepieces:80
+      ACTIVEPIECES_URL: http://activepieces:8080
     networks:
       - bronn-internal
       - bronn-external

@@ -111,14 +111,7 @@ export const LanguageToggle = () => {
       </Popover>
       {showCommunity && (
         <div className="pt-1">
-          <Link
-            className="text-xs text-primary hover:underline font-medium"
-            rel="noopener noreferrer"
-            target="_blank"
-            to="https://www.activepieces.com/docs/about/i18n"
-          >
-            {t('Help translate Activepieces →')}
-          </Link>
+          {/* Bronn white-label: External help links disabled */}
         </div>
       )}
     </div>

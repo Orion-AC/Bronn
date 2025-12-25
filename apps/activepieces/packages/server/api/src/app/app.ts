@@ -322,6 +322,11 @@ export const setupApp = async (app: FastifyInstance): Promise<FastifyInstance> =
             await app.register(projectModule)
             await app.register(communityPiecesModule)
             await app.register(queueMetricsModule)
+            // BRONN: Enable essential modules for self-hosted embedding
+            await app.register(signingKeyModule)      // For JWT signing
+            await app.register(managedAuthnModule)    // For managed auth flow
+            await app.register(apiKeyModule)          // For API key creation
+            // NOTE: platformPieceModule removed - conflicts with communityPiecesModule
             break
     }
 

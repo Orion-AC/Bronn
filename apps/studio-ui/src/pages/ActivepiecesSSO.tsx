@@ -43,7 +43,8 @@ export const ActivepiecesSSO: React.FC = () => {
 
                     // Redirect to Activepieces
                     // The token is already set on the Activepieces side via our backend sync
-                    window.location.href = 'http://localhost:8080';
+                    const activepiecesUrl = import.meta.env.VITE_ACTIVEPIECES_URL || 'http://localhost:8080';
+                    window.location.href = activepiecesUrl;
                 } else {
                     throw new Error('Could not get authentication token');
                 }

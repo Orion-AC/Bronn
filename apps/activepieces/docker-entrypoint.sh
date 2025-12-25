@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
 
-# Set default values if not provided
-export AP_APP_TITLE="${AP_APP_TITLE:-Activepieces}"
-export AP_FAVICON_URL="${AP_FAVICON_URL:-https://cdn.activepieces.com/brand/favicon.ico}"
+# Set default values for Bronn white-label deployment
+export AP_APP_TITLE="${AP_APP_TITLE:-Bronn Workflows}"
+export AP_FAVICON_URL="${AP_FAVICON_URL:-/favicon.ico}"
 
 # Set default PORT for Cloud Run (Cloud Run sets this, but default to 8080 for local)
 export PORT="${PORT:-8080}"
