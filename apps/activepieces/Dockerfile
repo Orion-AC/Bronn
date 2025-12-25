@@ -119,4 +119,4 @@ COPY --from=build /usr/src/app/dist/packages/react-ui /usr/share/nginx/html/
 LABEL service=activepieces
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
-EXPOSE 80
+EXPOSE 8080
