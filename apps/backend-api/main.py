@@ -12,29 +12,29 @@ logger = logging.getLogger(__name__)
 try:
     # This might fail on first run if DB is not ready, handled by try-except
     models.Base.metadata.create_all(bind=database.engine)
-    logger.info(\"Database tables created successfully\")
+    logger.info("Database tables created successfully")
 except Exception as e:
-    logger.error(f\"Failed to initialize database tables: {e}\")
-    logger.info(\"App will start anyway - database may connect later\")
+    logger.error(f"Failed to initialize database tables: {e}")
+    logger.info("App will start anyway - database may connect later")
 
 app = FastAPI(
-    title=\"Bronn API\",
-    description=\"Bronn Backend with Activepieces Integration\",
-    version=\"1.0.0\"
+    title="Bronn API",
+    description="Bronn Backend with Activepieces Integration",
+    version="1.0.0"
 )
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        \"http://localhost:5173\",
-        \"http://localhost:5000\",
-        \"http://localhost:8080\",
-        \"https://bronn-frontend-480969272523.us-central1.run.app\",
+        "http://localhost:5173",
+        "http://localhost:5000",
+        "http://localhost:8080",
+        "https://bronn-frontend-480969272523.us-central1.run.app",
     ],
     allow_credentials=True,
-    allow_methods=[\"*\"],
-    allow_headers=[\"*\"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers
@@ -48,9 +48,9 @@ app.include_router(flows_proxy.router)
 
 
 # Health check
-@app.get(\"/api/health\")
+@app.get("/api/health")
 def health_check():
-    return {\"status\": \"healthy\", \"service\": \"bronn-backend\"}
+    return {"status": "healthy", "service": "bronn-backend"}
 
 # Agent endpoints moved to routers/agents.py
 
