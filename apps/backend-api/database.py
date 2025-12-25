@@ -60,7 +60,14 @@ def get_database_url() -> str:
     if database_url:
         return database_url
     
-    # Fallback to local SQLite
+    # Fallback to local SQLite (only allowed in local development)
+    # Cloud Run sets K_SERVICE env var - we must have a real database in production
+    if os.getenv("K_SERVICE"):
+        raise RuntimeError(
+            "Database not configured in production. "
+            "Set CLOUD_SQL_CONNECTION_NAME or DATABASE_URL environment variable."
+        )
+    logger.warning("No database configured, using local SQLite (development mode)")
     return "sqlite:///./bronn.db"
 
 

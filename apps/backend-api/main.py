@@ -2,11 +2,34 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+import os
 import models, database
 from routers import activepieces, auth, agents, workflows, sso, live_logs, flows_proxy
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def get_cors_origins() -> List[str]:
+    """
+    Get CORS origins from environment variable or use defaults.
+    
+    In production: Set CORS_ORIGINS env var (comma-separated)
+    In development: Falls back to localhost defaults
+    """
+    custom_origins = os.getenv("CORS_ORIGINS", "")
+    if custom_origins:
+        origins = [o.strip() for o in custom_origins.split(",") if o.strip()]
+        logger.info(f"CORS origins from environment: {origins}")
+        return origins
+    
+    # Default origins for local development
+    return [
+        "http://localhost:5173",
+        "http://localhost:5000",
+        "http://localhost:8080",
+    ]
+
 
 # Initialize database tables (non-blocking for health checks)
 try:
@@ -23,15 +46,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS
+# Enable CORS with configurable origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5000",
-        "http://localhost:8080",
-        "https://bronn-frontend-480969272523.us-central1.run.app",
-    ],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

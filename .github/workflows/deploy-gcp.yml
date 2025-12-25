@@ -176,14 +176,22 @@ jobs:
       - name: Build & Push Frontend Image
         id: build-frontend
         run: |
+          # Get project number for dynamic service URLs
+          PROJECT_NUMBER=$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)')
+          BACKEND_URL="https://bronn-backend-${PROJECT_NUMBER}.${{ env.GCP_REGION }}.run.app"
+          AP_URL="https://activepieces-${PROJECT_NUMBER}.${{ env.GCP_REGION }}.run.app"
+          
           IMAGE="${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }}"
           echo "Building frontend image: $IMAGE"
+          echo "  Backend URL: $BACKEND_URL"
+          echo "  Activepieces URL: $AP_URL"
+          
           docker build -t "$IMAGE" \
             --build-arg VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }} \
             --build-arg VITE_FIREBASE_AUTH_DOMAIN=${{ env.GCP_PROJECT_ID }}.firebaseapp.com \
             --build-arg VITE_FIREBASE_PROJECT_ID=${{ env.GCP_PROJECT_ID }} \
-            --build-arg VITE_BACKEND_URL=https://bronn-backend-480969272523.us-central1.run.app \
-            --build-arg VITE_ACTIVEPIECES_URL=https://activepieces-480969272523.us-central1.run.app \
+            --build-arg VITE_BACKEND_URL=$BACKEND_URL \
+            --build-arg VITE_ACTIVEPIECES_URL=$AP_URL \
             -f apps/studio-ui/Dockerfile.prod apps/studio-ui
           docker push "$IMAGE"
           echo "::notice::Frontend image pushed: $IMAGE"
@@ -238,6 +246,9 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         run: |
+          # Get frontend URL dynamically after it's deployed
+          FRONTEND_URL="https://bronn-frontend-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app"
+          
           gcloud run deploy bronn-backend \
             --image=${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }} \
             --region=${{ env.GCP_REGION }} \
@@ -249,7 +260,8 @@ jobs:
             --set-env-vars="CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION }}" \
             --set-env-vars="DB_USER=bronn" \
             --set-env-vars="DB_NAME=bronn" \
-            --set-env-vars="ACTIVEPIECES_URL=https://activepieces-480969272523.us-central1.run.app" \
+            --set-env-vars="ACTIVEPIECES_URL=https://activepieces-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app" \
+            --set-env-vars="CORS_ORIGINS=$FRONTEND_URL" \
             --set-secrets="DB_PASS=bronn-db-password:latest" \
             --min-instances=0 \
             --max-instances=10 \

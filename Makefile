@@ -96,6 +96,42 @@ db-seed:
 	docker compose exec bronn-backend python -m backend.seed
 
 # =============================================================================
+# Testing (Matches CI/CD Pipeline)
+# =============================================================================
+
+test:
+	@echo "🧪 Running backend tests..."
+	cd apps/backend-api && python -m pytest tests/ -v
+	@echo "✅ Backend tests complete"
+	@echo "🔨 Running frontend build check..."
+	cd apps/studio-ui && npm run build
+	@echo "✅ Frontend build complete"
+
+lint:
+	@echo "🔍 Running backend linter..."
+	cd apps/backend-api && ruff check . --output-format=github || true
+	@echo "🔍 Running frontend linter..."
+	cd apps/studio-ui && npm run lint || true
+
+# =============================================================================
+# Production Build (Local Testing)
+# =============================================================================
+# Use this to test production Docker builds locally before pushing
+
+build-prod:
+	@echo "🏗️ Building production backend image..."
+	docker build -t bronn-backend:local -f apps/backend-api/Dockerfile apps/backend-api
+	@echo "🏗️ Building production frontend image..."
+	docker build -t bronn-frontend:local \
+		--build-arg VITE_FIREBASE_API_KEY=local-test \
+		--build-arg VITE_FIREBASE_AUTH_DOMAIN=salesos-473014.firebaseapp.com \
+		--build-arg VITE_FIREBASE_PROJECT_ID=salesos-473014 \
+		--build-arg VITE_BACKEND_URL=http://localhost:8000 \
+		--build-arg VITE_ACTIVEPIECES_URL=http://localhost:8080 \
+		-f apps/studio-ui/Dockerfile.prod apps/studio-ui
+	@echo "✅ Production builds complete"
+
+# =============================================================================
 # Activepieces Subtree Management
 # =============================================================================
 

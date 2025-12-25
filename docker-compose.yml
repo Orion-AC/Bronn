@@ -61,7 +61,10 @@ services:
   # Activepieces - Headless Workflow Engine
   # ---------------------------------------------------------------------------
   activepieces:
-    image: ghcr.io/activepieces/activepieces:0.74.3
+    build:
+      context: ./apps/activepieces
+      dockerfile: Dockerfile
+    image: activepieces:local
     container_name: bronn-activepieces
     restart: unless-stopped
     depends_on:
