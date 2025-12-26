@@ -249,6 +249,9 @@ jobs:
           # Get frontend URL dynamically after it's deployed
           FRONTEND_URL="https://bronn-frontend-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app"
           
+          # Build CORS origins list (comma-separated)
+          CORS_ORIGINS="https://bronn.dev,https://www.bronn.dev,https://studio.bronn.dev,$FRONTEND_URL"
+          
           gcloud run deploy bronn-backend \
             --image=${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }} \
             --region=${{ env.GCP_REGION }} \
@@ -261,7 +264,7 @@ jobs:
             --set-env-vars="DB_USER=bronn" \
             --set-env-vars="DB_NAME=bronn" \
             --set-env-vars="ACTIVEPIECES_URL=https://activepieces-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app" \
-            --set-env-vars="CORS_ORIGINS=$FRONTEND_URL" \
+            --set-env-vars="CORS_ORIGINS=$CORS_ORIGINS" \
             --set-secrets="DB_PASS=bronn-db-password:latest" \
             --set-secrets="ACTIVEPIECES_API_KEY=activepieces-api-key:latest" \
             --min-instances=0 \
