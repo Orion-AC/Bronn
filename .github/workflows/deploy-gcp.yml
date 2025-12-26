@@ -246,20 +246,29 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         run: |
-          # Get frontend URL dynamically after it's deployed
-          FRONTEND_URL="https://bronn-frontend-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app"
+          # Get project number for dynamic URLs
+          PROJECT_NUMBER=$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)')
+          FRONTEND_URL="https://bronn-frontend-${PROJECT_NUMBER}.${{ env.GCP_REGION }}.run.app"
+          AP_URL="https://activepieces-${PROJECT_NUMBER}.${{ env.GCP_REGION }}.run.app"
           
-          # Build CORS origins list (comma-separated)
-          CORS_ORIGINS="https://bronn.dev,https://www.bronn.dev,https://studio.bronn.dev,${FRONTEND_URL}"
+          # Create env-vars file (handles commas in CORS_ORIGINS properly)
+          cat > /tmp/backend-env.yaml << EOF
+          GCP_PROJECT_ID: "${{ env.GCP_PROJECT_ID }}"
+          FIREBASE_PROJECT_ID: "${{ secrets.FIREBASE_PROJECT_ID }}"
+          CLOUD_SQL_CONNECTION_NAME: "${{ secrets.CLOUD_SQL_CONNECTION }}"
+          DB_USER: "bronn"
+          DB_NAME: "bronn"
+          ACTIVEPIECES_URL: "${AP_URL}"
+          CORS_ORIGINS: "https://bronn.dev,https://www.bronn.dev,https://studio.bronn.dev,${FRONTEND_URL}"
+          EOF
           
-          # Use ^^ as delimiter instead of comma for --set-env-vars when value contains commas
           gcloud run deploy bronn-backend \
             --image=${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }} \
             --region=${{ env.GCP_REGION }} \
             --platform=managed \
             --allow-unauthenticated \
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION }} \
-            --set-env-vars="^@@^GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }}@@FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}@@CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION }}@@DB_USER=bronn@@DB_NAME=bronn@@ACTIVEPIECES_URL=https://activepieces-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app@@CORS_ORIGINS=${CORS_ORIGINS}" \
+            --env-vars-file=/tmp/backend-env.yaml \
             --set-secrets="DB_PASS=bronn-db-password:latest" \
             --set-secrets="ACTIVEPIECES_API_KEY=activepieces-api-key:latest" \
             --min-instances=0 \
