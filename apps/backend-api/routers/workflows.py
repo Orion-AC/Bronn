@@ -14,7 +14,7 @@ import logging
 
 import models
 import database
-from auth.users import get_current_user
+from auth.firebase_auth import verify_firebase_token
 from auth.signing_key import get_public_key
 
 logger = logging.getLogger(__name__)
@@ -56,20 +56,30 @@ class WorkflowUpdate(BaseModel):
 # ============================================================================
 
 def get_authenticated_user(authorization: Optional[str] = Header(None)):
-    """Extract and validate user from authorization header."""
+    """Extract and validate user from Firebase authorization header."""
     if not authorization:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     try:
-        token = authorization.split(" ")[1]
-    except IndexError:
+        token = authorization.replace("Bearer ", "").strip()
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid authorization header")
     
-    user = get_current_user(token)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    if not token:
+        raise HTTPException(status_code=401, detail="No token provided")
     
-    return user
+    # Verify with Firebase
+    decoded = verify_firebase_token(token)
+    if not decoded:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    # Return user info from Firebase token
+    return {
+        "uid": decoded.get("uid"),
+        "email": decoded.get("email", ""),
+        "email_verified": decoded.get("email_verified", False),
+        "tenant_id": decoded.get("tenant_id", "default")
+    }
 
 
 # ============================================================================
