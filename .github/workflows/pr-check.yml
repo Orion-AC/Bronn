@@ -28,6 +28,8 @@ jobs:
           cd apps/backend-api
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-asyncio httpx ruff
+          # Verify pytest-asyncio is installed
+          python -c "import pytest_asyncio; print('pytest-asyncio installed:', pytest_asyncio.__version__)"
       
       - name: Lint with Ruff
         run: |
@@ -37,7 +39,7 @@ jobs:
       - name: Run Tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)/apps:$(pwd)/apps/backend-api
-          pytest apps/backend-api/tests/ -v --cov=apps/backend-api
+          pytest apps/backend-api/tests/ -v --cov=apps/backend-api -p pytest_asyncio
 
   # ============================================================================
   # Frontend Checks
