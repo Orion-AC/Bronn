@@ -16,7 +16,6 @@ import {
     RefreshCw,
     Clock,
     CheckCircle2,
-    XCircle,
     Archive
 } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';

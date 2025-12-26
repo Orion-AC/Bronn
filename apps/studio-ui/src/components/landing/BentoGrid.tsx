@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Database, Lock, Search, Globe } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 const BentoCard = ({
     title,
@@ -10,7 +11,7 @@ const BentoCard = ({
 }: {
     title: string,
     subtitle: string,
-    icon: any,
+    icon: LucideIcon,
     className?: string,
     children?: React.ReactNode
 }) => (

@@ -33,7 +33,7 @@ export const WorkspaceEditor: React.FC = () => {
     const [logs, setLogs] = useState<Array<{ time: string, type: string, message: string }>>([
         { time: new Date().toLocaleTimeString(), type: 'SYSTEM', message: 'Workspace initialized. Ready.' }
     ]);
-    const [wsConnected, setWsConnected] = useState(false);
+    const [, setWsConnected] = useState(false);
 
     // WebSocket for live logs with retry logic
     useEffect(() => {

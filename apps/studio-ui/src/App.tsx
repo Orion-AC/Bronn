@@ -41,7 +41,7 @@ function App() {
       try {
         setUser(JSON.parse(storedUser));
         setIsAuthenticated(true);
-      } catch (e) {
+      } catch {
         // Invalid stored data, clear it
         localStorage.removeItem('token');
         localStorage.removeItem('user');

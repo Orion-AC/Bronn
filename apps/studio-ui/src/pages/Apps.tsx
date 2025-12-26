@@ -65,9 +65,9 @@ export const WorkspaceList: React.FC = () => {
 
             const data = await response.json();
             setWorkspaces(data);
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error fetching workspaces:', err);
-            setError(err.message || 'Failed to load workspaces');
+            setError(err instanceof Error ? err.message : 'Failed to load workspaces');
         } finally {
             setLoading(false);
         }
@@ -103,9 +103,9 @@ export const WorkspaceList: React.FC = () => {
             const newWorkspace = await response.json();
             // Navigate to the new workspace
             navigate(`/workspace/${newWorkspace.id}`);
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error creating workspace:', err);
-            setError(err.message);
+            setError(err instanceof Error ? err.message : 'Failed to create workspace');
         } finally {
             setCreating(false);
         }

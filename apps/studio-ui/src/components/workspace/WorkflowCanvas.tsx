@@ -34,8 +34,8 @@ export const WorkflowCanvas: React.FC = () => {
                 if (!response.ok) throw new Error('Failed to fetch flows');
                 const data: FlowsResponse = await response.json();
                 setFlows(data.data || []);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch flows');
             } finally {
                 setLoading(false);
             }

@@ -11,9 +11,10 @@ import {
     MousePointer2,
     ArrowRight
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const ModuleCard = ({ icon: Icon, title, color, delay }: { icon: any, title: string, color: string, delay: number }) => (
+const ModuleCard = ({ icon: Icon, title, color, delay }: { icon: LucideIcon, title: string, color: string, delay: number }) => (
     <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}

@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import './CreateAgentModal.css';
 
+interface WorkflowOption {
+    id: string | number;
+    name: string;
+}
+
 interface CreateAgentModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -12,7 +17,7 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
     const [name, setName] = useState('');
     const [role, setRole] = useState('General Assistant');
     const [skills, setSkills] = useState<string[]>([]);
-    const [availableWorkflows, setAvailableWorkflows] = useState<any[]>([]);
+    const [availableWorkflows, setAvailableWorkflows] = useState<WorkflowOption[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     React.useEffect(() => {

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { FileCode, Workflow, Zap } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 const Step = ({
     icon: Icon,
@@ -9,7 +10,7 @@ const Step = ({
     align = 'left',
     index
 }: {
-    icon: any,
+    icon: LucideIcon,
     title: string,
     description: string,
     codeSnippet?: React.ReactNode,

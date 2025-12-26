@@ -158,11 +158,12 @@ export const ActivepiecesEmbed: React.FC<ActivepiecesEmbedProps> = ({
             if (connected && window.activepieces) {
                 try {
                     window.activepieces.disconnect();
-                } catch (e) {
+                } catch {
                     // Ignore disconnect errors
                 }
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initializeEmbed]);
 
     const handleRetry = () => {
