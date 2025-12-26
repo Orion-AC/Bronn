@@ -87,14 +87,14 @@ else
     echo "AP_POSTGRES_HOST: ${AP_POSTGRES_HOST:-not set}"
     echo "AP_QUEUE_MODE: ${AP_QUEUE_MODE:-not set}"
     echo "AP_EXECUTION_MODE: ${AP_EXECUTION_MODE:-not set}"
+    echo "AP_CONTAINER_TYPE: ${AP_CONTAINER_TYPE:-not set}"
     echo "=================="
     
-    # Run Node.js with standard error handling
-    echo "Starting Node.js process..."
-    node --enable-source-maps --max-old-space-size=3072 dist/packages/server/api/main.cjs 2>&1 || {
+    # Quick sanity check - can Node.js at least start?
+    echo "Testing Node.js startup..."
+    node -e "console.log('Node.js works! Testing require...');try{require('./dist/packages/server/api/main.cjs')}catch(e){console.error('REQUIRE ERROR:',e.message,e.stack);process.exit(1)}" 2>&1 || {
         EXIT_CODE=$?
-        echo "=== NODE.JS CRASHED WITH EXIT CODE $EXIT_CODE ==="
-        echo "Please check the logs above for the actual error message."
+        echo "=== NODE.JS REQUIRE TEST CRASHED WITH EXIT CODE $EXIT_CODE ==="
         sleep 30
         exit $EXIT_CODE
     }
