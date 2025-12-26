@@ -117,7 +117,8 @@ def create_activepieces_jwt(
     first_name: str = "User",
     last_name: str = "",
     role: str = "EDITOR",
-    expires_in_minutes: int = 5
+    expires_in_minutes: int = 5,
+    project_name: str = None
 ) -> str:
     """
     Create a JWT token for Activepieces authentication (provisioning token).
@@ -133,6 +134,7 @@ def create_activepieces_jwt(
         last_name: User's last name
         role: User role - EDITOR, VIEWER, or ADMIN
         expires_in_minutes: Token expiration time (default 5 minutes)
+        project_name: Display name for the project in Activepieces
         
     Returns:
         Signed JWT token string
@@ -154,6 +156,10 @@ def create_activepieces_jwt(
         "exp": int(exp.timestamp()),
         "iat": int(datetime.utcnow().timestamp())
     }
+    
+    # Add project display name if provided
+    if project_name:
+        payload["projectDisplayName"] = project_name
     
     # Sign the token with RS256
     token = jwt.encode(

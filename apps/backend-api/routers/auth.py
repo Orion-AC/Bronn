@@ -287,13 +287,16 @@ async def exchange_firebase_for_activepieces(
     This is the core authentication federation endpoint. It:
     1. Verifies the Firebase ID token
     2. Retrieves user info from the database
-    3. Generates an RS256-signed Activepieces JWT with v3 claims
-    4. Returns the token for use with the Activepieces Embedding SDK
+    3. Fetches workspace name if project_id is a valid workspace UUID
+    4. Generates an RS256-signed Activepieces JWT with v3 claims
+    5. Returns the token for use with the Activepieces Embedding SDK
     
     The returned token is short-lived (5 minutes) and should be immediately
     passed to activepieces.configure() for SDK initialization.
     """
     import os
+    import uuid
+    from models import Workspace
     
     # Extract token from "Bearer <token>"
     token = authorization.replace("Bearer ", "").strip()
@@ -323,6 +326,18 @@ async def exchange_firebase_for_activepieces(
     else:
         ap_role = "EDITOR"  # Default role for regular users
     
+    # Try to fetch workspace name if project_id is a valid UUID
+    project_name = None
+    if request.project_id and request.project_id != "default":
+        try:
+            workspace_uuid = uuid.UUID(request.project_id)
+            workspace = db.query(Workspace).filter(Workspace.id == workspace_uuid).first()
+            if workspace:
+                project_name = workspace.name
+        except (ValueError, TypeError):
+            # Invalid UUID format, just use project_id as-is
+            pass
+    
     # Generate Activepieces provisioning JWT (RS256 signed)
     try:
         ap_embed_token = create_activepieces_jwt(
@@ -331,7 +346,8 @@ async def exchange_firebase_for_activepieces(
             first_name=user.first_name or user.display_name or "User",
             last_name=user.last_name or "",
             role=ap_role,
-            expires_in_minutes=5  # Short-lived for security
+            expires_in_minutes=5,  # Short-lived for security
+            project_name=project_name  # Pass workspace name for display
         )
     except Exception as e:
         raise HTTPException(

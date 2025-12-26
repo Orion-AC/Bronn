@@ -176,7 +176,7 @@ export const WorkspaceEditor: React.FC = () => {
                 <div className="workspace-canvas">
                     {activeTab === 'workflows' && (
                         <div className="canvas-content workflow-canvas" style={{ minHeight: '700px' }}>
-                            <ActivepiecesEmbed />
+                            <ActivepiecesEmbed projectId={id} />
                         </div>
                     )}
 
