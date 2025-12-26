@@ -43,8 +43,7 @@ MIIEpAIBAAKCAQEA2mKqH...test-key
             )
             yield mock
     
-    @pytest.mark.asyncio
-    async def test_managed_auth_flow_generates_jwt(self, mock_activepieces_url, mock_signing_key):
+    def test_managed_auth_flow_generates_jwt(self, mock_activepieces_url, mock_signing_key):
         """Test that managed auth generates a valid JWT structure."""
         from auth.signing_key import create_activepieces_jwt
         
@@ -56,9 +55,9 @@ MIIEpAIBAAKCAQEA2mKqH...test-key
             # This would fail in CI without real keys, so we just verify the function exists
             assert callable(create_activepieces_jwt)
     
-    @pytest.mark.asyncio
-    async def test_get_activepieces_session_uses_managed_endpoint(self, mock_activepieces_url):
+    def test_get_activepieces_session_uses_managed_endpoint(self, mock_activepieces_url):
         """Test that session retrieval uses /v1/managed-authn/external-token."""
+        import asyncio
         from auth.activepieces_sync import get_activepieces_session, ACTIVEPIECES_AVAILABLE
         
         if not ACTIVEPIECES_AVAILABLE:
@@ -69,23 +68,26 @@ MIIEpAIBAAKCAQEA2mKqH...test-key
         mock_response.status_code = 200
         mock_response.json.return_value = {"token": "test-session-token"}
         
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_instance = AsyncMock()
-            mock_instance.post.return_value = mock_response
-            mock_client.return_value.__aenter__.return_value = mock_instance
-            
-            with patch("auth.activepieces_sync.create_activepieces_jwt", return_value="mock-jwt"):
-                token, error = await get_activepieces_session(
-                    user_id="user-123",
-                    project_id="project-456",
-                    first_name="Test",
-                    last_name="User"
-                )
+        async def run_test():
+            with patch("httpx.AsyncClient") as mock_client:
+                mock_instance = AsyncMock()
+                mock_instance.post.return_value = mock_response
+                mock_client.return_value.__aenter__.return_value = mock_instance
                 
-                # Verify correct endpoint was called
-                mock_instance.post.assert_called_once()
-                call_args = mock_instance.post.call_args
-                assert "/v1/managed-authn/external-token" in call_args[0][0]
+                with patch("auth.activepieces_sync.create_activepieces_jwt", return_value="mock-jwt"):
+                    token, error = await get_activepieces_session(
+                        user_id="user-123",
+                        project_id="project-456",
+                        first_name="Test",
+                        last_name="User"
+                    )
+                    
+                    # Verify correct endpoint was called
+                    mock_instance.post.assert_called_once()
+                    call_args = mock_instance.post.call_args
+                    assert "/v1/managed-authn/external-token" in call_args[0][0]
+        
+        asyncio.get_event_loop().run_until_complete(run_test())
 
 
 class TestAuthBypassValidation:
