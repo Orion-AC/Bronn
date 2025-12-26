@@ -250,21 +250,16 @@ jobs:
           FRONTEND_URL="https://bronn-frontend-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app"
           
           # Build CORS origins list (comma-separated)
-          CORS_ORIGINS="https://bronn.dev,https://www.bronn.dev,https://studio.bronn.dev,$FRONTEND_URL"
+          CORS_ORIGINS="https://bronn.dev,https://www.bronn.dev,https://studio.bronn.dev,${FRONTEND_URL}"
           
+          # Use ^^ as delimiter instead of comma for --set-env-vars when value contains commas
           gcloud run deploy bronn-backend \
             --image=${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }} \
             --region=${{ env.GCP_REGION }} \
             --platform=managed \
             --allow-unauthenticated \
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION }} \
-            --set-env-vars="GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
-            --set-env-vars="FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" \
-            --set-env-vars="CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION }}" \
-            --set-env-vars="DB_USER=bronn" \
-            --set-env-vars="DB_NAME=bronn" \
-            --set-env-vars="ACTIVEPIECES_URL=https://activepieces-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app" \
-            --set-env-vars="CORS_ORIGINS=$CORS_ORIGINS" \
+            --set-env-vars="^@@^GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }}@@FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}@@CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION }}@@DB_USER=bronn@@DB_NAME=bronn@@ACTIVEPIECES_URL=https://activepieces-$(gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app@@CORS_ORIGINS=${CORS_ORIGINS}" \
             --set-secrets="DB_PASS=bronn-db-password:latest" \
             --set-secrets="ACTIVEPIECES_API_KEY=activepieces-api-key:latest" \
             --min-instances=0 \
