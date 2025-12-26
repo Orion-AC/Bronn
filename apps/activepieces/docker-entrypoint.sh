@@ -71,12 +71,29 @@ else
     echo "Starting backend server with Node.js (WORKER mode or default)"
     echo "Working directory: $(pwd)"
     echo "Node version: $(node --version)"
+    echo "Listing dist/packages/server/api/:"
+    ls -la dist/packages/server/api/ 2>&1 || echo "Directory listing failed"
     
-    # Run with verbose error output
-    node --enable-source-maps dist/packages/server/api/main.cjs 2>&1 || {
+    # Check if main.cjs exists
+    if [ ! -f "dist/packages/server/api/main.cjs" ]; then
+        echo "ERROR: main.cjs not found!"
+        ls -la dist/packages/server/ 2>&1
+        exit 1
+    fi
+    
+    # Print all AP_ environment variables for debugging
+    echo "=== Activepieces Environment Variables ==="
+    env | grep "^AP_" | grep -v "PASSWORD\|SECRET\|KEY" || echo "No AP_ vars found"
+    echo "=========================================="
+    
+    # Run with verbose error output and NODE_DEBUG
+    echo "Starting Node.js process..."
+    NODE_DEBUG=module,net node --trace-warnings --enable-source-maps dist/packages/server/api/main.cjs 2>&1 || {
         EXIT_CODE=$?
         echo "=== NODE.JS CRASHED WITH EXIT CODE $EXIT_CODE ==="
         echo "Please check the logs above for the actual error message."
+        # Keep container running briefly to allow log collection
+        sleep 30
         exit $EXIT_CODE
     }
 fi
