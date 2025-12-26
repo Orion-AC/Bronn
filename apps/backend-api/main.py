@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.orm import Session
 from typing import List
 import os
@@ -38,22 +40,14 @@ def get_cors_origins() -> List[str]:
     ]
 
 
-# Initialize database tables (non-blocking for health checks)
-try:
-    # This might fail on first run if DB is not ready, handled by try-except
-    models.Base.metadata.create_all(bind=database.engine)
-    logger.info("Database tables created successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize database tables: {e}")
-    logger.info("App will start anyway - database may connect later")
-
+# Create FastAPI app FIRST
 app = FastAPI(
     title="Bronn API",
     description="Bronn Backend with Activepieces Integration",
     version="1.0.0"
 )
 
-# Enable CORS with configurable origins
+# Enable CORS with configurable origins - MUST be before any routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_cors_origins(),
@@ -62,7 +56,100 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+
+# =============================================================================
+# Global OPTIONS handler - catches all preflight requests BEFORE route matching
+# =============================================================================
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    """
+    Handle all OPTIONS preflight requests globally.
+    This ensures CORS preflight succeeds even if route validation would fail.
+    """
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Origin, X-Requested-With",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
+
+
+# =============================================================================
+# Exception handler to ensure CORS headers on errors
+# =============================================================================
+@app.exception_handler(StarletteHTTPException)
+async def cors_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Ensure CORS headers are present even on error responses."""
+    origin = request.headers.get("origin", "")
+    allowed_origins = get_cors_origins()
+    
+    # Check if origin is allowed
+    allow_origin = origin if origin in allowed_origins else allowed_origins[0] if allowed_origins else "*"
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={
+            "Access-Control-Allow-Origin": allow_origin,
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch-all exception handler with CORS headers."""
+    origin = request.headers.get("origin", "")
+    allowed_origins = get_cors_origins()
+    allow_origin = origin if origin in allowed_origins else "*"
+    
+    logger.error(f"Unhandled exception: {exc}")
+    
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+        headers={
+            "Access-Control-Allow-Origin": allow_origin,
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
+
+
+# Initialize database tables (non-blocking for health checks)
+try:
+    from sqlalchemy import text
+    
+    # Drop legacy tables with wrong schema (INTEGER id instead of UUID)
+    # This is needed because production has old schema that conflicts with new UUID-based models
+    with database.engine.connect() as conn:
+        # Check if workflows table exists with wrong column type
+        result = conn.execute(text("""
+            SELECT data_type FROM information_schema.columns 
+            WHERE table_name = 'workflows' AND column_name = 'id'
+        """))
+        row = result.fetchone()
+        
+        if row and row[0] == 'integer':
+            logger.warning("Detected legacy INTEGER-based tables, dropping for UUID migration...")
+            conn.execute(text("DROP TABLE IF EXISTS workflow_runs CASCADE"))
+            conn.execute(text("DROP TABLE IF EXISTS workflows CASCADE"))
+            conn.execute(text("DROP TABLE IF EXISTS workspaces CASCADE"))
+            conn.commit()
+            logger.info("Legacy tables dropped successfully")
+    
+    # Now create tables with correct UUID schema
+    models.Base.metadata.create_all(bind=database.engine)
+    logger.info("Database tables created successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize database tables: {e}")
+    logger.info("App will start anyway - database may connect later")
+
+
+# Include routers AFTER middleware and exception handlers
 app.include_router(auth.router)
 app.include_router(activepieces.router)
 app.include_router(agents.router)
@@ -77,7 +164,3 @@ app.include_router(flows_proxy.router)
 @app.get("/api/health")
 def health_check():
     return {"status": "healthy", "service": "bronn-backend"}
-
-# Agent endpoints moved to routers/agents.py
-
-# Workflow endpoints moved to routers/workflows.py
