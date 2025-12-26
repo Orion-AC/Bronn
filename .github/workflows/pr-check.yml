@@ -27,7 +27,7 @@ jobs:
         run: |
           cd apps/backend-api
           pip install -r requirements.txt
-          pip install pytest pytest-cov httpx ruff
+          pip install pytest pytest-cov pytest-asyncio httpx ruff
       
       - name: Lint with Ruff
         run: |
