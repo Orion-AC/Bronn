@@ -71,12 +71,20 @@ async def _ap_request(method: str, path: str, data: Optional[Dict] = None) -> An
 
 @router.get("/flows")
 async def list_flows(
+    project_id: str,  # Required: Activepieces projectId
     folder_id: Optional[str] = None,
     limit: int = 20,
     status: Optional[str] = None
 ):
-    """List all flows from the Activepieces engine."""
-    query_params = f"?limit={limit}"
+    """List all flows from the Activepieces engine.
+    
+    Args:
+        project_id: Required Activepieces project ID
+        folder_id: Optional folder filter
+        limit: Max flows to return (default 20)
+        status: Optional status filter (ENABLED, DISABLED)
+    """
+    query_params = f"?projectId={project_id}&limit={limit}"
     if folder_id:
         query_params += f"&folderId={folder_id}"
     if status:

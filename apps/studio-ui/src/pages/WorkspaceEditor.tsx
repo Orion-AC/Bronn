@@ -12,7 +12,7 @@ import {
     Search
 } from 'lucide-react';
 import './WorkspaceEditor.css';
-import { WorkflowCanvas } from '../components/workspace/WorkflowCanvas';
+import { ActivepiecesEmbed } from '../components/ActivepiecesEmbed';
 import { Agents } from './Agents';
 
 type Tab = 'workflows' | 'agents' | 'code';
@@ -175,8 +175,8 @@ export const WorkspaceEditor: React.FC = () => {
                 {/* Content Canvas */}
                 <div className="workspace-canvas">
                     {activeTab === 'workflows' && (
-                        <div className="canvas-content workflow-canvas">
-                            <WorkflowCanvas />
+                        <div className="canvas-content workflow-canvas" style={{ minHeight: '700px' }}>
+                            <ActivepiecesEmbed />
                         </div>
                     )}
 

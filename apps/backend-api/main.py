@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import os
 import models, database
-from routers import activepieces, auth, agents, workflows, sso, live_logs, flows_proxy
+from routers import activepieces, auth, agents, workflows, workspaces, sso, live_logs, flows_proxy
 import logging
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,7 @@ app.include_router(auth.router)
 app.include_router(activepieces.router)
 app.include_router(agents.router)
 app.include_router(workflows.router)
+app.include_router(workspaces.router)
 app.include_router(sso.router)
 app.include_router(live_logs.router)
 app.include_router(flows_proxy.router)

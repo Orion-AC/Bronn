@@ -112,12 +112,13 @@ export const ActivepiecesEmbed: React.FC<ActivepiecesEmbedProps> = ({
                         disableNavigation: false,
                         hideLogo: true,
                     },
-                    // Dashboard settings
+                    // Dashboard settings - show full dashboard with tabs
                     dashboard: {
-                        hideSidebar: true,
+                        hideSidebar: false,  // Show Flows, Tables, Runs tabs
                     },
-                    // Branding settings
+                    // Show folder organization
                     hideFolders: false,
+                    // Branding settings
                     hideLogoInBuilder: true,
                     // Styling to match Bronn theme
                     styling: {

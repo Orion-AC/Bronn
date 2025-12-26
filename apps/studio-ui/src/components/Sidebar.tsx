@@ -67,8 +67,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout }) => {
                     <span>Agents</span>
                 </div>
                 <div
-                    className={`nav-item ${isActive('/workflows') ? 'active' : ''}`}
-                    onClick={() => navigate('/workspaces')}
+                    className={`nav-item ${location.pathname.startsWith('/workflows') ? 'active' : ''}`}
+                    onClick={() => navigate('/workflows')}
                 >
                     <Workflow size={18} />
                     <span>Workflows</span>

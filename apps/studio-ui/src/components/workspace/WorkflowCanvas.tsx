@@ -16,6 +16,8 @@ interface FlowsResponse {
 }
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+// Activepieces Project ID - should be set per-user or per-workspace in production
+const ACTIVEPIECES_PROJECT_ID = import.meta.env.VITE_ACTIVEPIECES_PROJECT_ID || '';
 
 export const WorkflowCanvas: React.FC = () => {
     const [flows, setFlows] = useState<Flow[]>([]);
@@ -25,7 +27,10 @@ export const WorkflowCanvas: React.FC = () => {
     useEffect(() => {
         const fetchFlows = async () => {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/flows-proxy/flows`);
+                if (!ACTIVEPIECES_PROJECT_ID) {
+                    throw new Error('VITE_ACTIVEPIECES_PROJECT_ID not configured');
+                }
+                const response = await fetch(`${BACKEND_URL}/api/flows-proxy/flows?project_id=${ACTIVEPIECES_PROJECT_ID}`);
                 if (!response.ok) throw new Error('Failed to fetch flows');
                 const data: FlowsResponse = await response.json();
                 setFlows(data.data || []);
