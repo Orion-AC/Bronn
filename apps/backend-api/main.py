@@ -15,7 +15,7 @@ def get_cors_origins() -> List[str]:
     Get CORS origins from environment variable or use defaults.
     
     In production: Set CORS_ORIGINS env var (comma-separated)
-    In development: Falls back to localhost defaults
+    In development: Falls back to localhost + production defaults
     """
     custom_origins = os.getenv("CORS_ORIGINS", "")
     if custom_origins:
@@ -23,8 +23,15 @@ def get_cors_origins() -> List[str]:
         logger.info(f"CORS origins from environment: {origins}")
         return origins
     
-    # Default origins for local development
+    # Default origins - includes production and local development
     return [
+        # Production
+        "https://bronn.dev",
+        "https://www.bronn.dev",
+        "https://studio.bronn.dev",
+        # Cloud Run frontend
+        "https://bronn-frontend-480969272523.us-central1.run.app",
+        # Local development
         "http://localhost:5173",
         "http://localhost:5000",
         "http://localhost:8080",
