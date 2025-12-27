@@ -35,10 +35,11 @@ services:
     networks:
       - bronn-internal
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bronn}" ]
-      interval: 10s
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bronn} -d ${POSTGRES_DB:-bronn}" ]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
   # ---------------------------------------------------------------------------
   # Redis - Required by Activepieces
@@ -53,9 +54,10 @@ services:
       - bronn-internal
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 5s
 
   # ---------------------------------------------------------------------------
   # Activepieces - Headless Workflow Engine

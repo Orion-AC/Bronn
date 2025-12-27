@@ -315,15 +315,17 @@ jobs:
             --set-env-vars="AP_CONTAINER_TYPE=WORKER_AND_APP" \
             --set-env-vars="AP_APP_TITLE=Bronn Workflows" \
             --set-env-vars="AP_BRONN_AUTH_MODE=managed" \
+            --set-env-vars="NODE_OPTIONS=--max-old-space-size=1536" \
             --set-secrets="AP_POSTGRES_PASSWORD=bronn-db-password:latest" \
             --set-secrets="AP_ENCRYPTION_KEY=ap-encryption-key:latest" \
             --set-secrets="AP_JWT_SECRET=ap-jwt-secret:latest" \
             --min-instances=0 \
             --max-instances=10 \
-            --memory=1Gi \
-            --cpu=1 \
-            --timeout=300 \
-            --cpu-boost
+            --memory=2Gi \
+            --cpu=2 \
+            --timeout=600 \
+            --startup-cpu-boost \
+            --execution-environment=gen2
 
 
       - name: Output Service URLs
