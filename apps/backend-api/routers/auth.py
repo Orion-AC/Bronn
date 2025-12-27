@@ -109,15 +109,35 @@ async def verify_token(
     firebase_uid = decoded["uid"]
     email = decoded.get("email", "")
     
-    # Find or create user in database
+    # Find user by firebase_uid first, then by email (handles migration/re-auth cases)
     user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+    
+    if not user and email:
+        # Check if user exists with this email but different Firebase UID
+        # This handles cases where user signed up with different provider or was migrated
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            # Link existing user to this Firebase UID
+            user.firebase_uid = firebase_uid
+            user.last_login_at = datetime.utcnow()
+            db.commit()
     
     if not user:
         # First time login - create user in database
         user = User.from_firebase_token(decoded)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        try:
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        except Exception as e:
+            db.rollback()
+            # Race condition - another request created the user
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                user.firebase_uid = firebase_uid
+                db.commit()
+            else:
+                raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
     else:
         # Update last login time
         user.last_login_at = datetime.utcnow()
