@@ -90,12 +90,12 @@ else
     echo "AP_CONTAINER_TYPE: ${AP_CONTAINER_TYPE:-not set}"
     echo "=================="
     
-    # Quick sanity check - can Node.js at least start?
-    echo "Testing Node.js startup..."
-    node -e "console.log('Node.js works! Testing require...');try{require('./dist/packages/server/api/main.cjs')}catch(e){console.error('REQUIRE ERROR:',e.message,e.stack);process.exit(1)}" 2>&1 || {
-        EXIT_CODE=$?
-        echo "=== NODE.JS REQUIRE TEST CRASHED WITH EXIT CODE $EXIT_CODE ==="
-        sleep 30
-        exit $EXIT_CODE
-    }
+    # Run Node.js with async error tracing
+    echo "Starting Node.js process with crash tracing..."
+    exec node \
+        --enable-source-maps \
+        --max-old-space-size=3072 \
+        --trace-uncaught \
+        --unhandled-rejections=strict \
+        dist/packages/server/api/main.cjs 2>&1
 fi

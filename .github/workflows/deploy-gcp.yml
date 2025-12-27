@@ -312,6 +312,7 @@ jobs:
             --set-env-vars="AP_FRONTEND_URL=$AP_URL" \
             --set-env-vars="AP_QUEUE_MODE=MEMORY" \
             --set-env-vars="AP_EXECUTION_MODE=SANDBOX_CODE_ONLY" \
+            --set-env-vars="AP_CONTAINER_TYPE=WORKER_AND_APP" \
             --set-env-vars="AP_APP_TITLE=Bronn Workflows" \
             --set-env-vars="AP_BRONN_AUTH_MODE=managed" \
             --set-secrets="AP_POSTGRES_PASSWORD=bronn-db-password:latest" \
